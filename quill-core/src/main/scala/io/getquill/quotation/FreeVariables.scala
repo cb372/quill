@@ -20,6 +20,7 @@ import io.getquill.ast.StatefulTransformer
 import io.getquill.ast.Take
 import io.getquill.ast.Union
 import io.getquill.ast.UnionAll
+import io.getquill.ast.Foreach
 
 case class State(seen: collection.Set[Ident], free: collection.Set[Ident])
 
@@ -35,6 +36,8 @@ case class FreeVariables(state: State)
         (f, FreeVariables(State(state.seen, state.free ++ t.state.free)))
       case OptionOperation(t, a, b, c) =>
         (ast, free(a, b, c))
+      case q @ Foreach(a, b, c) =>
+        (q, free(a, b, c))
       case other =>
         super.apply(other)
     }

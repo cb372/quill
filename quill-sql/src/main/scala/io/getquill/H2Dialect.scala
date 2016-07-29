@@ -1,17 +1,19 @@
 package io.getquill
 
+import io.getquill.idiom.StatementInterpolator._
 import java.util.concurrent.atomic.AtomicInteger
-import io.getquill.context.sql.idiom.PositionalVariables
+import io.getquill.context.sql.idiom.PositionalBindVariables
 import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.idiom.Statement
 
 trait H2Dialect
   extends SqlIdiom
-  with PositionalVariables {
+  with PositionalBindVariables {
 
   private[getquill] val preparedStatementId = new AtomicInteger
 
-  override def prepare(sql: String) =
-    s"PREPARE p${preparedStatementId.incrementAndGet} AS ${positionalVariables(sql)}"
+  override def prepareForProbing(statement: Statement) =
+    stmt"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $statement}"
 }
 
 object H2Dialect extends H2Dialect

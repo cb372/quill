@@ -1,8 +1,11 @@
-package io.getquill
+package io.getquill.idiom
 
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill.util.LoadObject
+import io.getquill.NamingStrategy
+import scala.util.Try
+import io.getquill.util.CollectTry
 
 object LoadNaming {
 
@@ -12,8 +15,10 @@ object LoadNaming {
     q"io.getquill.NamingStrategy($list)"
   }
 
-  def static(c: Context)(tpe: c.Type) =
-    NamingStrategy(strategies(c)(tpe).map(LoadObject[NamingStrategy](c)))
+  def static(c: Context)(tpe: c.Type): Try[NamingStrategy] =
+    CollectTry {
+      strategies(c)(tpe).map(LoadObject[NamingStrategy](c)(_))
+    }.map(NamingStrategy(_))
 
   private def strategies(c: Context)(tpe: c.Type) = {
     import c.universe._

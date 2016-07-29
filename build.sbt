@@ -16,7 +16,7 @@ lazy val quill =
     )
 
 lazy val `quill-with-js` = 
-  (project in file("."))
+  project
     .settings(name := "quill")
     .settings(tutSettings ++ commonSettings)
     .settings(`tut-settings`:_*)
@@ -28,8 +28,19 @@ lazy val `quill-with-js` =
       `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
     )
 
+lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
+  def projectDir(crossBase: File, projectType: String): File =
+    projectType match {
+      case "jvm" => crossBase
+      case "js"  => crossBase / s".$projectType"
+    }
+
+  def sharedSrcDir(projectBase: File, conf: String): Option[File] =
+    Some(projectBase.getParentFile / "src" / conf / "scala")
+}
+
 lazy val `quill-core` = 
-  crossProject.crossType(CrossType.Pure)
+  crossProject.crossType(superPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
@@ -45,7 +56,7 @@ lazy val `quill-core-jvm` = `quill-core`.jvm
 lazy val `quill-core-js` = `quill-core`.js
 
 lazy val `quill-sql` = 
-  crossProject.crossType(CrossType.Pure)
+  crossProject.crossType(superPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .jsSettings(
@@ -193,10 +204,10 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "com.google.code.findbugs" % "jsr305" % "3.0.1"     % "provided" // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
-  EclipseKeys.useProjectId := true,
   unmanagedClasspath in Test ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
   ),
+  EclipseKeys.eclipseOutput := Some("bin"),
   scalacOptions ++= Seq(
     "-Xfatal-warnings",
     "-deprecation",
@@ -233,7 +244,6 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     .setPreference(IndentLocalDefs, false)
     .setPreference(SpacesWithinPatternBinders, true)
     .setPreference(SpacesAroundMultiImports, true),
-  EclipseKeys.eclipseOutput := Some("bin"),
   publishMavenStyle := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"

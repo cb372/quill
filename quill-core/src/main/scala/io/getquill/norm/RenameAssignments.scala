@@ -6,14 +6,14 @@ object RenameAssignments extends StatelessTransformer {
 
   override def apply(e: Action): Action =
     e match {
-      case AssignedAction(insert @ Insert(table: Entity), assignments) =>
-        AssignedAction(insert, renameAssignments(assignments, table))
+      case Insert(table: Entity, assignments) =>
+        Insert(table, renameAssignments(assignments, table))
 
-      case AssignedAction(update @ Update(table: Entity), assignments) =>
-        AssignedAction(update, renameAssignments(assignments, table))
+      case Update(table: Entity, assignments) =>
+        Update(table, renameAssignments(assignments, table))
 
-      case AssignedAction(update @ Update(Filter(table: Entity, x, where)), assignments) =>
-        AssignedAction(update, renameAssignments(assignments, table))
+      case Update(filter @ Filter(table: Entity, x, where), assignments) =>
+        Update(filter, renameAssignments(assignments, table))
 
       case other =>
         super.apply(other)

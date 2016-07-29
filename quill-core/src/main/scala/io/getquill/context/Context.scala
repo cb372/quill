@@ -1,38 +1,36 @@
 package io.getquill.context
 
-import scala.reflect.ClassTag
-
+import scala.language.higherKinds
+import scala.language.experimental.macros
 import io.getquill.dsl.CoreDsl
 import java.io.Closeable
-import io.getquill.WrappedType
+import scala.util.Try
+import io.getquill.NamingStrategy
 
-abstract class Context[R: ClassTag, S: ClassTag] extends Closeable with CoreDsl {
+trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
+  extends Closeable
+  with CoreDsl {
 
-  type Decoder[T] = io.getquill.context.Decoder[R, T]
-  type Encoder[T] = io.getquill.context.Encoder[S, T]
+  type RunQuerySingleResult[T]
+  type RunQueryResult[T]
+  type RunActionResult
+  type RunActionReturningResult[T]
+  type RunBatchActionResult
+  type RunBatchActionReturningResult[T]
 
-  case class MappedEncoding[I, O](f: I => O)
+  def probe(statement: String): Try[_]
 
-  def mappedEncoding[I, O](f: I => O) = MappedEncoding(f)
-
-  implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
-    new Decoder[O] {
-      def apply(index: Int, row: R) =
-        mapped.f(decoder(index, row))
-    }
-
-  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] =
-    new Encoder[I] {
-      def apply(index: Int, value: I, row: S) =
-        encoder(index, mapped.f(value), row)
-    }
-
-  implicit def wrappedTypeDecoder[T <: WrappedType] =
-    MappedEncoding[T, T#Type](_.value)
+  def run[T](quoted: Quoted[T]): RunQuerySingleResult[T] = macro QueryMacro.runQuerySingle[T]
+  def run[T](quoted: Quoted[Query[T]]): RunQueryResult[T] = macro QueryMacro.runQuery[T]
+  def run(quoted: Quoted[Action]): RunActionResult = macro ActionMacro.runAction
+  def run[T](quoted: Quoted[ActionReturning[T]]): RunActionReturningResult[T] = macro ActionMacro.runActionReturning[T]
+  def run(quoted: Quoted[BatchAction[Action]]): RunBatchActionResult = macro ActionMacro.runBatchAction
+  def run[T](quoted: Quoted[BatchAction[ActionReturning[T]]]): RunBatchActionReturningResult[T] = macro ActionMacro.runBatchActionReturning[T]
 
   protected def handleSingleResult[T](list: List[T]) =
     list match {
       case value :: Nil => value
       case other        => throw new IllegalStateException(s"Expected a single result but got $other")
     }
+
 }

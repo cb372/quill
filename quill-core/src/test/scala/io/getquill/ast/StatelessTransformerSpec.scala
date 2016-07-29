@@ -117,29 +117,15 @@ class StatelessTransformerSpec extends Spec {
     }
 
     "action" - {
-      "update" - {
-        "assigned" in {
-          val ast: Ast = AssignedAction(Update(Ident("a")), List(Assignment(Ident("b"), "c", Ident("d"))))
-          Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
-            AssignedAction(Update(Ident("a'")), List(Assignment(Ident("b"), "c", Ident("d'"))))
-        }
-        "unassigned" in {
-          val ast: Ast = Update(Ident("a"))
-          Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
-            Update(Ident("a'"))
-        }
+      "update" in {
+        val ast: Ast = Update(Ident("a"), List(Assignment(Ident("b"), "c", Ident("d"))))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
+          Update(Ident("a'"), List(Assignment(Ident("b"), "c", Ident("d'"))))
       }
-      "insert" - {
-        "assigned" in {
-          val ast: Ast = AssignedAction(Insert(Ident("a")), List(Assignment(Ident("b"), "c", Ident("d"))))
-          Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
-            AssignedAction(Insert(Ident("a'")), List(Assignment(Ident("b"), "c", Ident("d'"))))
-        }
-        "unassigned" in {
-          val ast: Ast = Insert(Ident("a"))
-          Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
-            Insert(Ident("a'"))
-        }
+      "insert" in {
+        val ast: Ast = Insert(Ident("a"), List(Assignment(Ident("b"), "c", Ident("d"))))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
+          Insert(Ident("a'"), List(Assignment(Ident("b"), "c", Ident("d'"))))
       }
       "delete" in {
         val ast: Ast = Delete(Ident("a"))

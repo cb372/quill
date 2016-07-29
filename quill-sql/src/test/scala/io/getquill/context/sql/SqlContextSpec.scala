@@ -7,45 +7,41 @@ import scala.util.Try
 import io.getquill.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.SqlMirrorContextWithQueryProbing
-import io.getquill.context.sql.testContext.qr1
-import io.getquill.context.sql.testContext.qr2
-import io.getquill.context.sql.testContext.quote
-import io.getquill.context.sql.testContext.unquote
+import io.getquill.context.sql.testContext._
 import io.getquill.Literal
-import io.getquill.NamingStrategy
+import io.getquill.MirrorSqlDialect
+import io.getquill.MirrorContextWithQueryProbing
+import io.getquill.idiom.Statement
 
-class SqlContextMacroSpec extends Spec {
+class SqlContextSpec extends Spec {
 
   "binds inputs according to the sql terms order" - {
     "filter.update" in {
       val q = quote {
-        (i: Int, l: Long) =>
-          qr1.filter(t => t.i == i).update(t => t.l -> l)
+        qr1.filter(t => t.i == lift(1)).update(t => t.l -> lift(2L))
       }
-      val mirror = testContext.run(q)(List((1, 2L)))
-      mirror.sql mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
-      mirror.bindList mustEqual List(Row(2l, 1))
+      val mirror = testContext.run(q)
+      mirror.string mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
+      mirror.prepareRow mustEqual Row(2l, 1)
     }
     "filter.map" in {
       val q = quote {
-        (i: Int, l: Long) =>
-          qr1.filter(t => t.i == i).map(t => l)
+        qr1.filter(t => t.i == lift(1)).map(t => lift(2L))
       }
-      val mirror = testContext.run(q)(1, 2L)
-      mirror.sql mustEqual "SELECT ? FROM TestEntity t WHERE t.i = ?"
-      mirror.binds mustEqual Row(2l, 1)
+      val mirror = testContext.run(q)
+      mirror.string mustEqual "SELECT ? FROM TestEntity t WHERE t.i = ?"
+      mirror.prepareRow mustEqual Row(2l, 1)
     }
   }
 
   "fails if the sql probing fails" in {
     case class Fail()
-    val s = new SqlMirrorContextWithQueryProbing[Literal]
+    val s = new MirrorContextWithQueryProbing[MirrorSqlDialect, Literal]
     "s.run(query[Fail])" mustNot compile
   }
 
   "fails if the query can't be translated to sql" in {
-    val ctx = new SqlMirrorContextWithQueryProbing
+    val ctx = new MirrorContextWithQueryProbing[MirrorSqlDialect, Literal]
     val q = quote {
       qr1.flatMap(a => qr2.filter(b => b.s == a.s).take(1))
     }
@@ -57,16 +53,16 @@ class SqlContextMacroSpec extends Spec {
     "testContext.run(qr1.delete)" mustNot compile
 
     class EvilDBDialect extends SqlIdiom {
-      def prepare(sql: String) = sql
+      override def liftingPlaceholder(index: Int): String = "?"
+      override def prepareForProbing(statement: Statement) = statement
     }
-    object testContext extends SqlContext[EvilDBDialect, NamingStrategy, Any, Any] {
+    object testContext extends SqlContext[MirrorSqlDialect, Literal] {
 
       override def close = ()
       def probe(sql: String): Try[Any] = null
 
       implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] = null
       implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] = null
-      implicit def traversableEncoder[T](implicit d: Encoder[T]): Encoder[Traversable[T]] = null
 
       implicit val stringDecoder: Decoder[String] = null
       implicit val bigDecimalDecoder: Decoder[BigDecimal] = null

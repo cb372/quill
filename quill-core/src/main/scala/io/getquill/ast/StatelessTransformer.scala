@@ -16,8 +16,8 @@ trait StatelessTransformer {
       case OptionOperation(t, a, b, c) => OptionOperation(t, apply(a), b, apply(c))
       case If(a, b, c)                 => If(apply(a), apply(b), apply(c))
       case e: Dynamic                  => e
-      case e: Binding                  => e
-      case e: QuotedReference[_]       => e
+      case e: Lift                     => e
+      case e: QuotedReference          => e
       case Block(statements)           => Block(statements.map(apply))
       case Val(name, body)             => Val(name, apply(body))
       case o: Ordering                 => o
@@ -58,11 +58,11 @@ trait StatelessTransformer {
 
   def apply(e: Action): Action =
     e match {
-      case AssignedAction(action, assignments) => AssignedAction(apply(action), assignments.map(apply))
-      case Update(query)                       => Update(apply(query))
-      case Insert(query)                       => Insert(apply(query))
-      case Delete(query)                       => Delete(apply(query))
-      case Returning(query, property)          => Returning(apply(query), property)
+      case Update(query, assignments)  => Update(apply(query), assignments.map(apply))
+      case Insert(query, assignments)  => Insert(apply(query), assignments.map(apply))
+      case Delete(query)               => Delete(apply(query))
+      case Returning(query, property)  => Returning(apply(query), property)
+      case Foreach(query, alias, body) => Foreach(apply(query), alias, apply(body))
     }
 
   private def apply(e: Assignment): Assignment =

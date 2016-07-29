@@ -24,6 +24,7 @@ import io.getquill.ast.Tuple
 import io.getquill.ast.Union
 import io.getquill.ast.UnionAll
 import io.getquill.ast.Val
+import io.getquill.ast.Foreach
 
 case class BetaReduction(map: collection.Map[Ident, Ast])
   extends StatelessTransformer {
@@ -48,6 +49,8 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
       case Block(statements) =>
         val vals = statements.collect { case x: Val => x.name -> x.body }
         BetaReduction(map ++ vals)(statements.last)
+      case Foreach(query, alias, body) =>
+        Foreach(query, alias, BetaReduction(map - alias)(body))
       case other =>
         super.apply(other)
     }

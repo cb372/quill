@@ -1,8 +1,17 @@
-package io.getquill.context.sql
+package io.getquill.context.sql.idiom
 
 import io.getquill.ast.Ast
 import io.getquill.ast.Ident
 import io.getquill.quotation.FreeVariables
+import io.getquill.context.sql.FlattenSqlQuery
+import io.getquill.context.sql.FromContext
+import io.getquill.context.sql.InfixContext
+import io.getquill.context.sql.JoinContext
+import io.getquill.context.sql.QueryContext
+import io.getquill.context.sql.SetOperationSqlQuery
+import io.getquill.context.sql.SqlQuery
+import io.getquill.context.sql.TableContext
+import io.getquill.context.sql.UnaryOperationSqlQuery
 
 case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {
