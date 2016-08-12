@@ -1,20 +1,36 @@
 package io.getquill.norm
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.Ident
-import io.getquill.ast.Join
-import io.getquill.ast.Map
-import io.getquill.ast.OptionOperation
-import io.getquill.ast.Property
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.StatefulTransformer
+import io.getquill.ast._
+
+case class RenameProperties2(state: Tuple)
+    extends StatefulTransformer[Tuple] {
+
+  override def apply(q: Query): (Query, StatefulTransformer[Tuple]) =
+    q match {
+      case e: Entity =>
+        (e, RenameProperties2(Tuple(List(e))))
+      case Join(t, a, b, iA, iB, o) =>
+        val (ar, art) = apply(a)
+        val (br, brt) = apply(b)
+        val tuple = Tuple(List(art.state, brt.state))
+        val or = apply(o, tuple, List(iA, iB))
+        (Join(t, ar, br, iA, iB, o), RenameProperties2(tuple))
+      case q =>
+        super.apply(q)
+    }
+
+  private def apply[T](q: Ast, x: Ident, p: Ast)(f: (Ast, Ident, Ast) => T): (T, StatefulTransformer[Tuple]) = {
+    
+    ???
+  }
+
+  private def apply(ast: Ast, tuple: Tuple, aliases: List[Ident]): Ast = {
+    ???
+  }
+}
 
 case class RenameProperties(state: collection.Map[Ident, collection.Map[String, String]])
-  extends StatefulTransformer[collection.Map[Ident, collection.Map[String, String]]] {
+    extends StatefulTransformer[collection.Map[Ident, collection.Map[String, String]]] {
 
   override def apply(q: Query): (Query, StatefulTransformer[collection.Map[Ident, collection.Map[String, String]]]) =
     q match {

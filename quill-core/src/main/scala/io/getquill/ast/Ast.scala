@@ -1,8 +1,14 @@
 package io.getquill.ast
 
+import io.getquill.MirrorIdiom
+import io.getquill.Literal
+
 //************************************************************
 
-sealed trait Ast
+sealed trait Ast {
+  override def toString =
+    MirrorIdiom.translate(this)(Literal).toString
+}
 
 //************************************************************
 

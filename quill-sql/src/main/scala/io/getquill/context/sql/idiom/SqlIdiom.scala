@@ -257,7 +257,11 @@ trait SqlIdiom extends Idiom {
       assignments.map(a => stmt"${strategy.column(a.property).token} = ${scopedTokenizer(a.value)}").mkStmt(", ")
 
     implicit def propertyTokenizer: Tokenizer[Property] = Tokenizer[Property] {
-      case Property(_, name) => strategy.column(name).token
+      case Property(Property(_, name), "isEmpty")   => stmt"${strategy.column(name).token} IS NULL"
+      case Property(Property(_, name), "isDefined") => stmt"${strategy.column(name).token} IS NOT NULL"
+      case Property(Property(_, name), "nonEmpty")  => stmt"${strategy.column(name).token} IS NOT NULL"
+      case Property(Property(_, name), prop)        => stmt"${strategy.column(name).token}.${prop.token}"
+      case Property(_, name)                        => strategy.column(name).token
     }
 
     Tokenizer[Action] {

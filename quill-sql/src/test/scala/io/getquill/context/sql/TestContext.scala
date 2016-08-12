@@ -7,4 +7,8 @@ import io.getquill.SqlMirrorContext
 
 object testContext extends TestContextTemplate
 
-class TestContextTemplate extends SqlMirrorContext[MirrorSqlDialect, Literal] with TestEntities
+class TestContextTemplate
+  extends SqlMirrorContext[MirrorSqlDialect, Literal]
+  with TestEntities
+  with TestEncoders
+  with TestDecoders
