@@ -45,15 +45,16 @@ trait SqlIdiom extends Idiom {
 
   implicit def astTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
-      case a: Query     => SqlQuery(a).token
-      case a: Operation => a.token
-      case a: Infix     => a.token
-      case a: Action    => a.token
-      case a: Ident     => a.token
-      case a: Property  => a.token
-      case a: Value     => a.token
-      case a: If        => a.token
-      case a: Lift      => a.token
+      case a: Query      => SqlQuery(a).token
+      case a: Operation  => a.token
+      case a: Infix      => a.token
+      case a: Action     => a.token
+      case a: Ident      => a.token
+      case a: Property   => a.token
+      case a: Value      => a.token
+      case a: If         => a.token
+      case a: Lift       => a.token
+      case a: Assignment => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
         _: Val | _: Ordering | _: QuotedReference
@@ -238,6 +239,7 @@ trait SqlIdiom extends Idiom {
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"${values.token}"
     case Collection(values)  => stmt"${values.token}"
+    case r: Record           => fail("Can't translate a record to SQL.")
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
@@ -251,10 +253,12 @@ trait SqlIdiom extends Idiom {
     case e => strategy.default(e.name).token
   }
 
-  implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
+  implicit def assignmentTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
+    case Assignment(alias, prop, value) =>
+      stmt"${prop.token} = ${scopedTokenizer(value)}"
+  }
 
-    def set(assignments: List[Assignment]) =
-      assignments.map(a => stmt"${strategy.column(a.property).token} = ${scopedTokenizer(a.value)}").mkStmt(", ")
+  implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
 
     implicit def propertyTokenizer: Tokenizer[Property] = Tokenizer[Property] {
       case Property(Property(_, name), "isEmpty")   => stmt"${strategy.column(name).token} IS NULL"
@@ -267,15 +271,15 @@ trait SqlIdiom extends Idiom {
     Tokenizer[Action] {
 
       case Insert(table: Entity, assignments) =>
-        val columns = assignments.map(_.property).map(strategy.column(_))
+        val columns = assignments.map(_.property.token)
         val values = assignments.map(_.value)
         stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
 
       case Update(table: Entity, assignments) =>
-        stmt"UPDATE ${table.token} SET ${set(assignments)}"
+        stmt"UPDATE ${table.token} SET ${assignments.token}"
 
       case Update(Filter(table: Entity, x, where), assignments) =>
-        stmt"UPDATE ${table.token} SET ${set(assignments)} WHERE ${where.token}"
+        stmt"UPDATE ${table.token} SET ${assignments.token} WHERE ${where.token}"
 
       case Delete(Filter(table: Entity, x, where)) =>
         stmt"DELETE FROM ${table.token} WHERE ${where.token}"
@@ -283,7 +287,7 @@ trait SqlIdiom extends Idiom {
       case Delete(table: Entity) =>
         stmt"DELETE FROM ${table.token}"
 
-      case Returning(action, prop) =>
+      case Returning(action, prop, value) =>
         action.token
 
       case other =>

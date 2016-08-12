@@ -118,14 +118,14 @@ class StatelessTransformerSpec extends Spec {
 
     "action" - {
       "update" in {
-        val ast: Ast = Update(Ident("a"), List(Assignment(Ident("b"), "c", Ident("d"))))
+        val ast: Ast = Update(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
-          Update(Ident("a'"), List(Assignment(Ident("b"), "c", Ident("d'"))))
+          Update(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
       }
       "insert" in {
-        val ast: Ast = Insert(Ident("a"), List(Assignment(Ident("b"), "c", Ident("d"))))
+        val ast: Ast = Insert(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
-          Insert(Ident("a'"), List(Assignment(Ident("b"), "c", Ident("d'"))))
+          Insert(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
       }
       "delete" in {
         val ast: Ast = Delete(Ident("a"))

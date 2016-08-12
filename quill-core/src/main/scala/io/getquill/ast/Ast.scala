@@ -85,6 +85,8 @@ case class OptionOperation(t: OptionOperationType, ast: Ast, alias: Ident, body:
 
 case class If(condition: Ast, `then`: Ast, `else`: Ast) extends Ast
 
+case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast
+
 //************************************************************
 
 sealed trait Operation extends Ast
@@ -105,6 +107,8 @@ case class Tuple(values: List[Ast]) extends Value
 
 case class Collection(values: List[Ast]) extends Value
 
+case class Record(fields: collection.Map[Ident, Ast], default: Ast) extends Value
+
 //************************************************************
 
 case class Block(statements: List[Ast]) extends Ast
@@ -119,11 +123,9 @@ case class Update(query: Ast, assignments: List[Assignment]) extends Action
 case class Insert(query: Ast, assignments: List[Assignment]) extends Action
 case class Delete(query: Ast) extends Action
 
-case class Returning(action: Ast, property: String) extends Action
+case class Returning(action: Ast, alias: Ident, property: Ast) extends Action
 
 case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action
-
-case class Assignment(input: Ident, property: String, value: Ast)
 
 //************************************************************
 

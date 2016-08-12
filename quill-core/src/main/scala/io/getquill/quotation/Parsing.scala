@@ -30,26 +30,24 @@ trait Parsing extends EntityConfigParsing {
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
+    case q"$i: $typ"                        => astParser(i)
     case `liftParser`(value)                => value
     case `valParser`(value)                 => value
     case `patMatchValParser`(value)         => value
     case `valueParser`(value)               => value
     case `quotedAstParser`(value)           => value
-    case `queryParser`(query)               => query
-    case `functionParser`(function)         => function
-    case `actionParser`(action)             => action
+    case `queryParser`(value)               => value
+    case `functionParser`(value)            => value
+    case `actionParser`(value)              => value
     case `infixParser`(value)               => value
     case `orderingParser`(value)            => value
     case `operationParser`(value)           => value
-    case `identParser`(ident)               => ident
+    case `identParser`(value)               => value
     case `propertyParser`(value)            => value
     case `stringInterpolationParser`(value) => value
     case `optionOperationParser`(value)     => value
     case `boxingParser`(value)              => value
     case `ifParser`(value)                  => value
-
-    case q"$i: $typ"                        => astParser(i)
-
     case `patMatchParser`(value)            => value
     case `blockParser`(block)               => block
   }
@@ -407,20 +405,18 @@ trait Parsing extends EntityConfigParsing {
       Insert(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.delete" =>
       Delete(astParser(query))
-    case q"$action.returning[$r](($alias) => $e.$property)" =>
-      Returning(astParser(action), property.decodedName.toString)
-    case q"$action.returning[$r](($alias) => $e.$property)" =>
-      Returning(astParser(action), property.decodedName.toString)
+    case q"$action.returning[$r](($alias) => $body)" =>
+      Returning(astParser(action), identParser(alias), astParser(body))
     case q"$query.foreach[$t](($alias) => $body)" =>
       Foreach(astParser(query), identParser(alias), astParser(body))
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
     case q"((${ identParser(i1) }) => $pack.Predef.ArrowAssoc[$t](${ identParser(i2) }.$prop).$arrow[$v]($value))" if (i1 == i2) =>
-      Assignment(i1, prop.decodedName.toString, astParser(value))
+      Assignment(i1, Property(i2, prop.decodedName.toString), astParser(value))
 
     // Unused, it's here only to make eclipse's presentation compiler happy
-    case astParser(ast) => Assignment(Ident("unused"), "unused", Constant("unused"))
+    case astParser(ast) => Assignment(Ident("unused"), Ident("unused"), Constant("unused"))
   }
 
 }

@@ -8,6 +8,7 @@ trait StatelessTransformer {
       case e: Operation                => apply(e)
       case e: Action                   => apply(e)
       case e: Value                    => apply(e)
+      case e: Assignment               => apply(e)
 
       case Function(params, body)      => Function(params, apply(body))
       case e: Ident                    => e
@@ -41,6 +42,11 @@ trait StatelessTransformer {
       case Distinct(a) => Distinct(apply(a))
     }
 
+  def apply(e: Assignment): Assignment =
+    e match {
+      case Assignment(a, b, c) => Assignment(a, apply(b), apply(c))
+    }
+
   def apply(e: Operation): Operation =
     e match {
       case UnaryOperation(o, a)            => UnaryOperation(o, apply(a))
@@ -50,24 +56,20 @@ trait StatelessTransformer {
 
   def apply(e: Value): Value =
     e match {
-      case e: Constant        => e
-      case NullValue          => NullValue
-      case Tuple(values)      => Tuple(values.map(apply))
-      case Collection(values) => Collection(values.map(apply))
+      case e: Constant             => e
+      case NullValue               => NullValue
+      case Tuple(values)           => Tuple(values.map(apply))
+      case Collection(values)      => Collection(values.map(apply))
+      case Record(fields, default) => Record(fields.mapValues(apply), apply(default))
     }
 
   def apply(e: Action): Action =
     e match {
-      case Update(query, assignments)  => Update(apply(query), assignments.map(apply))
-      case Insert(query, assignments)  => Insert(apply(query), assignments.map(apply))
-      case Delete(query)               => Delete(apply(query))
-      case Returning(query, property)  => Returning(apply(query), property)
-      case Foreach(query, alias, body) => Foreach(apply(query), alias, apply(body))
-    }
-
-  private def apply(e: Assignment): Assignment =
-    e match {
-      case Assignment(input, property, value) => Assignment(input, property, apply(value))
+      case Update(query, assignments)        => Update(apply(query), assignments.map(apply))
+      case Insert(query, assignments)        => Insert(apply(query), assignments.map(apply))
+      case Delete(query)                     => Delete(apply(query))
+      case Returning(query, alias, property) => Returning(apply(query), alias, apply(property))
+      case Foreach(query, alias, body)       => Foreach(apply(query), alias, apply(body))
     }
 
 }

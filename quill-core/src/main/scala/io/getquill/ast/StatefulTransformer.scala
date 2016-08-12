@@ -6,12 +6,13 @@ trait StatefulTransformer[T] {
 
   def apply(e: Ast): (Ast, StatefulTransformer[T]) =
     e match {
-      case e: Query     => apply(e)
-      case e: Operation => apply(e)
-      case e: Action    => apply(e)
-      case e: Value     => apply(e)
+      case e: Query      => apply(e)
+      case e: Operation  => apply(e)
+      case e: Action     => apply(e)
+      case e: Value      => apply(e)
+      case e: Assignment => apply(e)
 
-      case e: Ident     => (e, this)
+      case e: Ident      => (e, this)
 
       case Function(a, b) =>
         val (bt, btt) = apply(b)
@@ -110,6 +111,14 @@ trait StatefulTransformer[T] {
         (Distinct(at), att)
     }
 
+  def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =
+    e match {
+      case Assignment(a, b, c) =>
+        val (bt, btt) = apply(b)
+        val (ct, ctt) = btt.apply(c)
+        (Assignment(a, bt, ct), ctt)
+    }
+
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
     e match {
       case UnaryOperation(o, a) =>
@@ -135,6 +144,10 @@ trait StatefulTransformer[T] {
       case Collection(a) =>
         val (at, att) = apply(a)(_.apply)
         (Collection(at), att)
+      case Record(a, b) =>
+        val (at, att) = apply(a.values.toList)(_.apply)
+        val (bt, btt) = att.apply(b)
+        (Record(a.keys.zip(at).toMap, bt), btt)
     }
 
   def apply(e: Action): (Action, StatefulTransformer[T]) =
@@ -150,20 +163,14 @@ trait StatefulTransformer[T] {
       case Delete(a) =>
         val (at, att) = apply(a)
         (Delete(at), att)
-      case Returning(a, b) =>
+      case Returning(a, b, c) =>
         val (at, att) = apply(a)
-        (Returning(at, b), att)
+        val (ct, ctt) = att.apply(c)
+        (Returning(at, b, ct), ctt)
       case Foreach(a, b, c) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (Foreach(at, b, ct), ctt)
-    }
-
-  def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =
-    e match {
-      case Assignment(a, b, c) =>
-        val (ct, ctt) = apply(c)
-        (Assignment(a, b, ct), ctt)
     }
 
   def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =

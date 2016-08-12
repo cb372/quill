@@ -18,6 +18,7 @@ trait Liftables {
     case ast: Ident => identLiftable(ast)
     case ast: Ordering => orderingLiftable(ast)
     case ast: Lift => liftLiftable(ast)
+    case ast: Assignment => assignmentLiftable(ast)
     case Val(name, body) => q"$pack.Val($name, $body)"
     case Block(statements) => q"$pack.Block($statements)"
     case Property(a, b) => q"$pack.Property($a, $b)"
@@ -119,11 +120,11 @@ trait Liftables {
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
-    case Update(a, b)     => q"$pack.Update($a, $b)"
-    case Insert(a, b)     => q"$pack.Insert($a, $b)"
-    case Delete(a)        => q"$pack.Delete($a)"
-    case Returning(a, b)  => q"$pack.Returning($a, $b)"
-    case Foreach(a, b, c) => q"$pack.Foreach($a, $b, $c)"
+    case Update(a, b)       => q"$pack.Update($a, $b)"
+    case Insert(a, b)       => q"$pack.Insert($a, $b)"
+    case Delete(a)          => q"$pack.Delete($a)"
+    case Returning(a, b, c) => q"$pack.Returning($a, $b, $c)"
+    case Foreach(a, b, c)   => q"$pack.Foreach($a, $b, $c)"
   }
 
   implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {
@@ -135,6 +136,12 @@ trait Liftables {
     case Constant(a)   => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
     case Tuple(a)      => q"$pack.Tuple($a)"
     case Collection(a) => q"$pack.Collection($a)"
+    case Record(fields, default) =>
+      val f = fields.toList.map {
+        case (name, ast) =>
+          q"$name -> $ast"
+      }
+      q"$pack.Record(scala.collection.Map(..$f), $default)"
   }
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
     case Ident(a) => q"$pack.Ident($a)"

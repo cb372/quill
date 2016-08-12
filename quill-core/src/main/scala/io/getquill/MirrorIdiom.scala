@@ -35,6 +35,7 @@ class MirrorIdiom extends Idiom {
     case ast: Ordering        => ast.token
     case ast: QuotedReference => ast.ast.token
     case ast: Lift            => ast.token
+    case ast: Assignment      => ast.token
   }
 
   implicit val ifTokenizer: Tokenizer[If] = Tokenizer[If] {
@@ -157,6 +158,12 @@ class MirrorIdiom extends Idiom {
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"(${values.token})"
     case Collection(values)  => stmt"Collection(${values.token})"
+    case Record(fields, default) =>
+      val f = fields.toList.map {
+        case (name, ast) =>
+          stmt"${name.token} -> ${ast.token}"
+      }
+      stmt"Record(${f.token}, ${default.token})"
   }
 
   implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {
@@ -164,15 +171,15 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit val actionTokenizer: Tokenizer[Action] = Tokenizer[Action] {
-    case Update(query, assignments)  => stmt"${query.token}.update(${assignments.token})"
-    case Insert(query, assignments)  => stmt"${query.token}.insert(${assignments.token})"
-    case Delete(query)               => stmt"${query.token}.delete"
-    case Returning(query, property)  => stmt"${query.token}.returning(_.${property.token})"
-    case Foreach(query, alias, body) => stmt"${query.token}.forach((${alias.token}) => ${body.token})"
+    case Update(query, assignments)    => stmt"${query.token}.update(${assignments.token})"
+    case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
+    case Delete(query)                 => stmt"${query.token}.delete"
+    case Returning(query, alias, body) => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
+    case Foreach(query, alias, body)   => stmt"${query.token}.forach((${alias.token}) => ${body.token})"
   }
 
   implicit val assignmentTokenizer: Tokenizer[Assignment] = Tokenizer[Assignment] {
-    case Assignment(ident, property, value) => stmt"${ident.token} => ${ident.token}.${property.token} -> ${value.token}"
+    case Assignment(ident, property, value) => stmt"${ident.token} => ${property.token} -> ${value.token}"
   }
 
   implicit val infixTokenizer: Tokenizer[Infix] = Tokenizer[Infix] {

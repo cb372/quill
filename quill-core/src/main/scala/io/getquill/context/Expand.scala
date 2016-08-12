@@ -1,7 +1,6 @@
 package io.getquill.context
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Returning
+import io.getquill.ast._
 import io.getquill.idiom.Statement
 import io.getquill.idiom.ReifyStatement
 import io.getquill.NamingStrategy
@@ -17,8 +16,8 @@ case class Expand[C <: Context[_, _]](
 
   def returningColumn =
     ast match {
-      case Returning(_, property) => Some(property)
-      case _                      => None
+      case Returning(_, _, Property(_, property)) => Some(property)
+      case _                                      => None
     }
 
   val (string, liftings) =

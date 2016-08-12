@@ -323,13 +323,13 @@ class QuotationSpec extends Spec {
           val q = quote {
             qr1.update(t => t.s -> "s")
           }
-          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment(Ident("t"), "s", Constant("s"))))
+          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
         }
         "set field using another field" in {
           val q = quote {
             qr1.update(t => t.i -> (t.i + 1))
           }
-          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment(Ident("t"), "i", BinaryOperation(Property(Ident("t"), "i"), NumericOperator.`+`, Constant(1)))))
+          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment(Ident("t"), Property(Ident("t"), "i"), BinaryOperation(Property(Ident("t"), "i"), NumericOperator.`+`, Constant(1)))))
         }
         "case class" in {
           val q = quote {
@@ -350,7 +350,7 @@ class QuotationSpec extends Spec {
           val q = quote {
             qr1.update(t => Predef.ArrowAssoc(t.s). -> [String]("s"))
           }
-          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment(Ident("t"), "s", Constant("s"))))
+          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
         }
         "unicode arrow must compile" in {
           """|quote {
@@ -364,7 +364,7 @@ class QuotationSpec extends Spec {
           val q = quote {
             qr1.insert(t => t.s -> "s")
           }
-          quote(unquote(q)).ast mustEqual Insert(Entity("TestEntity"), List(Assignment(Ident("t"), "s", Constant("s"))))
+          quote(unquote(q)).ast mustEqual Insert(Entity("TestEntity"), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
         }
         "case class" in {
           val q = quote {

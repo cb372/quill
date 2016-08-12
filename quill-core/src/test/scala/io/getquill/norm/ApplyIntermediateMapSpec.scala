@@ -16,43 +16,43 @@ class ApplyIntermediateMapSpec extends Spec {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y._1).flatMap(s => qr2.filter(z => z.s == s))
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+      ApplyIntermediateMap(q.ast) mustEqual q.ast
     }
     "filter" in {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y._1).filter(s => s == "s")
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+      ApplyIntermediateMap(q.ast) mustEqual q.ast
     }
     "map" in {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y._1).map(s => s)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+      ApplyIntermediateMap(q.ast) mustEqual q.ast
     }
     "sortBy" in {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y._1).sortBy(s => s)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+      ApplyIntermediateMap(q.ast) mustEqual q.ast
     }
     "take" in {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y._1).take(1)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+      ApplyIntermediateMap(q.ast) mustEqual q.ast
     }
     "drop" in {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y._1).drop(1)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+      ApplyIntermediateMap(q.ast) mustEqual q.ast
     }
     "identity map" in {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+      ApplyIntermediateMap(q.ast) mustEqual q.ast
     }
   }
 
@@ -64,7 +64,7 @@ class ApplyIntermediateMapSpec extends Spec {
       val n = quote {
         qr1.flatMap(y => qr2.filter(z => z.s == y.s))
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+      ApplyIntermediateMap(q.ast) mustEqual n.ast
     }
     "filter" in {
       val q = quote {
@@ -73,7 +73,7 @@ class ApplyIntermediateMapSpec extends Spec {
       val n = quote {
         qr1.filter(y => y.s == "s").map(y => y.s)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+      ApplyIntermediateMap(q.ast) mustEqual n.ast
     }
     "map" in {
       val q = quote {
@@ -82,7 +82,7 @@ class ApplyIntermediateMapSpec extends Spec {
       val n = quote {
         qr1.map(y => y.s)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+      ApplyIntermediateMap(q.ast) mustEqual n.ast
     }
     "sortBy" in {
       val q = quote {
@@ -91,7 +91,7 @@ class ApplyIntermediateMapSpec extends Spec {
       val n = quote {
         qr1.sortBy(y => y.s).map(y => y.s)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+      ApplyIntermediateMap(q.ast) mustEqual n.ast
     }
     "identity map" in {
       val q = quote {
@@ -100,7 +100,7 @@ class ApplyIntermediateMapSpec extends Spec {
       val n = quote {
         qr1.sortBy(y => y.s)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+      ApplyIntermediateMap(q.ast) mustEqual n.ast
     }
     "distinct" in {
       val q = quote {
@@ -109,7 +109,7 @@ class ApplyIntermediateMapSpec extends Spec {
       val n = quote {
         query[TestEntity].map(i => (i.i, i.l)).distinct
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+      ApplyIntermediateMap(q.ast) mustEqual n.ast
     }
     "take" in {
       val q = quote {
@@ -118,7 +118,7 @@ class ApplyIntermediateMapSpec extends Spec {
       val n = quote {
         qr1.take(1).map(y => y.s)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+      ApplyIntermediateMap(q.ast) mustEqual n.ast
     }
     "drop" in {
       val q = quote {
@@ -127,7 +127,7 @@ class ApplyIntermediateMapSpec extends Spec {
       val n = quote {
         qr1.drop(1).map(y => y.s)
       }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+      ApplyIntermediateMap(q.ast) mustEqual n.ast
     }
   }
 }

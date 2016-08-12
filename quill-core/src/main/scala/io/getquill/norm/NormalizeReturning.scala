@@ -2,14 +2,26 @@ package io.getquill.norm
 
 import io.getquill.ast._
 
-object NormalizeReturning extends StatelessTransformer {
-  override def apply(e: Action): Action = {
+object NormalizeReturning {
+
+  def apply(e: Action): Action = {
     e match {
-      case Returning(Insert(query, assignments), returning) =>
-        Insert(query, assignments.filterNot(_.property == returning))
-      case Returning(Update(query, assignments), returning) =>
-        Update(query, assignments.filterNot(_.property == returning))
-      case _ => super.apply(e)
+      case Returning(Insert(query, assignments), alias, body) =>
+        Insert(query, filterReturnedColumn(assignments, body))
+      case Returning(Update(query, assignments), alias, body) =>
+        Update(query, filterReturnedColumn(assignments, body))
+      case e => e
     }
   }
+
+  private def filterReturnedColumn(assignments: List[Assignment], column: Ast): List[Assignment] =
+    assignments.map(filterReturnedColumn(_, column)).flatten
+
+  private def filterReturnedColumn(assignment: Assignment, column: Ast): Option[Assignment] =
+    (assignment, column) match {
+      case (Assignment(_, Property(_, p1), _), Property(_, p2)) if (p1 == p2) =>
+        None
+      case (assignment, column) =>
+        Some(assignment)
+    }
 }

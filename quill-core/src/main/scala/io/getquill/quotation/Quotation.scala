@@ -20,30 +20,21 @@ trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftin
 
     val id = TermName(s"id${ast.hashCode.abs}")
 
-    val references = CollectAst(ast) {
-      case QuotedReference(tree: Tree, ast) => tree
-    }
-
     val (reifiedAst, liftings) = reifyLiftings(ast)
 
     val quotation =
       q"""
-        {
-          // avoid unused code warning
-          ..${references.map(r => q"$r.dynamic")}
-        
-          new ${c.prefix}.Quoted[$t] { 
-    
-            @${c.weakTypeOf[QuotedAst]}($reifiedAst)
-            def quoted = ast
-    
-            override def ast = $reifiedAst
-            override def toString = ast.toString
-    
-            def $id() = ()
-            
-            $liftings
-          }
+        new ${c.prefix}.Quoted[$t] { 
+  
+          @${c.weakTypeOf[QuotedAst]}($reifiedAst)
+          def quoted = ast
+  
+          override def ast = $reifiedAst
+          override def toString = ast.toString
+  
+          def $id() = ()
+          
+          $liftings
         }
       """
 
