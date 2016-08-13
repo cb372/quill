@@ -56,10 +56,9 @@ trait StatelessTransformer {
 
   def apply(e: Value): Value =
     e match {
-      case e: Constant             => e
-      case NullValue               => NullValue
-      case Tuple(values)           => Tuple(values.map(apply))
-      case Record(fields, default) => Record(fields.mapValues(apply), apply(default))
+      case e: Constant   => e
+      case NullValue     => NullValue
+      case Tuple(values) => Tuple(values.map(apply))
     }
 
   def apply(e: Action): Action =

@@ -157,12 +157,6 @@ class MirrorIdiom extends Idiom {
     case Constant(v)         => stmt"${v.toString.token}"
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"(${values.token})"
-    case Record(fields, default) =>
-      val f = fields.toList.map {
-        case (name, ast) =>
-          stmt"${name.token} -> ${ast.token}"
-      }
-      stmt"Record(${f.token}, ${default.token})"
   }
 
   implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {

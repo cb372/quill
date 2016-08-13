@@ -135,12 +135,6 @@ trait Liftables {
     case NullValue   => q"$pack.NullValue"
     case Constant(a) => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
     case Tuple(a)    => q"$pack.Tuple($a)"
-    case Record(fields, default) =>
-      val f = fields.toList.map {
-        case (name, ast) =>
-          q"$name -> $ast"
-      }
-      q"$pack.Record(scala.collection.Map(..$f), $default)"
   }
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
     case Ident(a) => q"$pack.Ident($a)"

@@ -7,9 +7,9 @@ object NormalizeReturning {
   def apply(e: Action): Action = {
     e match {
       case Returning(Insert(query, assignments), alias, body) =>
-        Insert(query, filterReturnedColumn(assignments, body))
+        Returning(Insert(query, filterReturnedColumn(assignments, body)), alias, body)
       case Returning(Update(query, assignments), alias, body) =>
-        Update(query, filterReturnedColumn(assignments, body))
+        Returning(Update(query, filterReturnedColumn(assignments, body)), alias, body)
       case e => e
     }
   }

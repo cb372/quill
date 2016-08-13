@@ -105,8 +105,6 @@ object NullValue extends Value
 
 case class Tuple(values: List[Ast]) extends Value
 
-case class Record(fields: collection.Map[Ident, Ast], default: Ast) extends Value
-
 //************************************************************
 
 case class Block(statements: List[Ast]) extends Ast

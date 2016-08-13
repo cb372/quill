@@ -31,7 +31,7 @@ class ActionMacro(val c: MacroContext)
         expanded.string,
         expanded.bind,
         ${returningExtractor(t.tpe)},
-        expanded.returningColumn.get
+        $returningColumn
       )
     """
 
@@ -57,7 +57,7 @@ class ActionMacro(val c: MacroContext)
             $batch,
             $param => {
               val expanded = $expanded
-              (expanded.string, expanded.bind, expanded.returningColumn.get)
+              (expanded.string, expanded.bind, $returningColumn)
             },
             ${returningExtractor(t.tpe)}
           )
@@ -86,6 +86,16 @@ class ActionMacro(val c: MacroContext)
       case other =>
         c.fail(s"Batch actions must be static quotations. Found: '$other'")
     }
+
+  private def returningColumn =
+    q"""
+      expanded.ast match {
+        case io.getquill.ast.Returning(_, _, io.getquill.ast.Property(_, property)) => 
+          property
+        case ast => 
+          io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
+      }
+    """
 
   private def returningExtractor(returnType: c.Type) = {
     val selectValues = encoding(Ident("X"), returnType, Encoding.inferDecoder(c))

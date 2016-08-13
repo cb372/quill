@@ -42,28 +42,28 @@ class ActionMacroSpec extends Spec {
     }
     "returning value" in {
       val q = quote {
-        qr1.insert(t => t.i -> 1).returning(_.l)
+        qr1.insert(t => t.i -> 1).returning(t => t.l)
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[TestEntity].insert(t => t.i -> 1)"
+      r.string mustEqual "query[TestEntity].insert(t => t.i -> 1).returning((t) => t.l)"
       r.prepareRow mustEqual Row()
       r.returningColumn mustEqual "l"
     }
     "scalar lifting + returning value" in {
       val q = quote {
-        qr1.insert(t => t.i -> lift(1)).returning(_.l)
+        qr1.insert(t => t.i -> lift(1)).returning(t => t.l)
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[TestEntity].insert(t => t.i -> ?)"
+      r.string mustEqual "query[TestEntity].insert(t => t.i -> ?).returning((t) => t.l)"
       r.prepareRow mustEqual Row(1)
       r.returningColumn mustEqual "l"
     }
     "case class lifting + returning value" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, None))).returning(_.l)
+        qr1.insert(lift(TestEntity("s", 1, 2L, None))).returning(t => t.l)
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?)"
+      r.string mustEqual "query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)"
       r.prepareRow mustEqual Row("s", 1, None)
       r.returningColumn mustEqual "l"
     }
@@ -118,35 +118,35 @@ class ActionMacroSpec extends Spec {
     }
     "scalar + returning" in {
       val insert = quote {
-        (p: Int) => qr1.insert(t => t.i -> p).returning(_.l)
+        (p: Int) => qr1.insert(t => t.i -> p).returning(t => t.l)
       }
       val q = quote {
         liftQuery(List(1, 2)).foreach((p: Int) => insert(p))
       }
       val r = testContext.run(q)
       r.prepare mustEqual List(
-        ("query[TestEntity].insert(t => t.i -> ?)", Row(1), "l"),
-        ("query[TestEntity].insert(t => t.i -> ?)", Row(2), "l")
+        ("query[TestEntity].insert(t => t.i -> ?).returning((t) => t.l)", Row(1), "l"),
+        ("query[TestEntity].insert(t => t.i -> ?).returning((t) => t.l)", Row(2), "l")
       )
     }
     "case class + returning" in {
       val q = quote {
-        liftQuery(entities).foreach(p => qr1.insert(p).returning(_.l))
+        liftQuery(entities).foreach(p => qr1.insert(p).returning(t => t.l))
       }
       val r = testContext.run(q)
       r.prepare mustEqual List(
-        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?)", Row("s1", 2, Some(4)), "l"),
-        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?)", Row("s5", 6, Some(8)), "l")
+        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)", Row("s1", 2, Some(4)), "l"),
+        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)", Row("s5", 6, Some(8)), "l")
       )
     }
     "case class + returning + nested action" in {
       val insert = quote {
-        (p: TestEntity) => qr1.insert(p).returning(_.l)
+        (p: TestEntity) => qr1.insert(p).returning(t => t.l)
       }
       val r = testContext.run(liftQuery(entities).foreach(p => insert(p)))
       r.prepare mustEqual List(
-        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?)", Row("s1", 2, Some(4)), "l"),
-        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?)", Row("s5", 6, Some(8)), "l")
+        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)", Row("s1", 2, Some(4)), "l"),
+        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)", Row("s5", 6, Some(8)), "l")
       )
     }
   }

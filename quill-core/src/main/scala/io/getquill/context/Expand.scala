@@ -8,17 +8,11 @@ import io.getquill.idiom.Idiom
 
 case class Expand[C <: Context[_, _]](
   val context: C,
-  ast:         Ast,
+  val ast:     Ast,
   statement:   Statement,
   idiom:       Idiom,
   naming:      NamingStrategy
 ) {
-
-  def returningColumn =
-    ast match {
-      case Returning(_, _, Property(_, property)) => Some(property)
-      case _                                      => None
-    }
 
   val (string, liftings) =
     ReifyStatement(
