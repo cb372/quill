@@ -81,7 +81,7 @@ class ActionMacroSpec extends Spec {
         (p: Int) => qr1.insert(t => t.i -> p)
       }
       val q = quote {
-        liftBatch(List(1, 2)).foreach((p: Int) => insert(p))
+        liftQuery(List(1, 2)).foreach((p: Int) => insert(p))
       }
       val r = testContext.run(q)
       r.prepare mustEqual List(
@@ -91,7 +91,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class" in {
       val q = quote {
-        liftBatch(entities).foreach(p => qr1.insert(p))
+        liftQuery(entities).foreach(p => qr1.insert(p))
       }
       val r = testContext.run(q)
       r.prepare mustEqual List(
@@ -106,7 +106,7 @@ class ActionMacroSpec extends Spec {
         (p: TestEntity) => qr1.insert(p)
       }
       val q = quote {
-        liftBatch(entities).foreach(p => nested(p))
+        liftQuery(entities).foreach(p => nested(p))
       }
       val r = testContext.run(q)
       r.prepare mustEqual List(
@@ -121,7 +121,7 @@ class ActionMacroSpec extends Spec {
         (p: Int) => qr1.insert(t => t.i -> p).returning(_.l)
       }
       val q = quote {
-        liftBatch(List(1, 2)).foreach((p: Int) => insert(p))
+        liftQuery(List(1, 2)).foreach((p: Int) => insert(p))
       }
       val r = testContext.run(q)
       r.prepare mustEqual List(
@@ -131,7 +131,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning" in {
       val q = quote {
-        liftBatch(entities).foreach(p => qr1.insert(p).returning(_.l))
+        liftQuery(entities).foreach(p => qr1.insert(p).returning(_.l))
       }
       val r = testContext.run(q)
       r.prepare mustEqual List(
@@ -143,7 +143,7 @@ class ActionMacroSpec extends Spec {
       val insert = quote {
         (p: TestEntity) => qr1.insert(p).returning(_.l)
       }
-      val r = testContext.run(liftBatch(entities).foreach(p => insert(p)))
+      val r = testContext.run(liftQuery(entities).foreach(p => insert(p)))
       r.prepare mustEqual List(
         ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?)", Row("s1", 2, Some(4)), "l"),
         ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?)", Row("s5", 6, Some(8)), "l")

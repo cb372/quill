@@ -1,13 +1,13 @@
 package io.getquill.ast
 
-import io.getquill.MirrorIdiom
-import io.getquill.Literal
-
 //************************************************************
 
 sealed trait Ast {
-  override def toString =
-    MirrorIdiom.translate(this)(Literal).toString
+  override def toString = {
+    import io.getquill.MirrorIdiom._
+    import io.getquill.idiom.StatementInterpolator._
+    this.token.toString
+  }
 }
 
 //************************************************************
@@ -105,8 +105,6 @@ object NullValue extends Value
 
 case class Tuple(values: List[Ast]) extends Value
 
-case class Collection(values: List[Ast]) extends Value
-
 case class Record(fields: collection.Map[Ident, Ast], default: Ast) extends Value
 
 //************************************************************
@@ -138,10 +136,12 @@ sealed trait Lift extends Ast {
   val value: Any
 }
 
-case class ScalarLift(name: String, value: Any, encoder: Any) extends Lift
+sealed trait ScalarLift extends Lift {
+  val encoder: Any
+}
+case class ScalarValueLift(name: String, value: Any, encoder: Any) extends ScalarLift
+case class ScalarQueryLift(name: String, value: Any, encoder: Any) extends ScalarLift
 
-case class CaseClassLift(name: String, value: Any) extends Lift
-
-case class ScalarBatchLift(name: String, value: Any, encoder: Any) extends Lift
-
-case class CaseClassBatchLift(name: String, value: Any) extends Lift
+sealed trait CaseClassLift extends Lift
+case class CaseClassValueLift(name: String, value: Any) extends CaseClassLift
+case class CaseClassQueryLift(name: String, value: Any) extends CaseClassLift

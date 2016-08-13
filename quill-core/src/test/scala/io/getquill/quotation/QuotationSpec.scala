@@ -7,65 +7,9 @@ import scala.math.BigDecimal.long2bigDecimal
 import scala.reflect.ClassTag
 
 import io.getquill.Spec
-import io.getquill.ast.Aggregation
-import io.getquill.ast.AggregationOperator
-import io.getquill.ast.Asc
-import io.getquill.ast.AscNullsFirst
-import io.getquill.ast.AscNullsLast
-import io.getquill.ast.Assignment
-import io.getquill.ast.Ast
-import io.getquill.ast.BinaryOperation
-import io.getquill.ast.BooleanOperator
-import io.getquill.ast.Collection
-import io.getquill.ast.ConfiguredEntity
-import io.getquill.ast.Constant
-import io.getquill.ast.Delete
-import io.getquill.ast.Desc
-import io.getquill.ast.DescNullsFirst
-import io.getquill.ast.DescNullsLast
-import io.getquill.ast.Distinct
-import io.getquill.ast.Drop
-import io.getquill.ast.Entity
-import io.getquill.ast.EqualityOperator
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.FullJoin
-import io.getquill.ast.Function
-import io.getquill.ast.FunctionApply
-import io.getquill.ast.GroupBy
-import io.getquill.ast.Ident
-import io.getquill.ast.If
-import io.getquill.ast.Infix
-import io.getquill.ast.InnerJoin
-import io.getquill.ast.Insert
-import io.getquill.ast.Join
-import io.getquill.ast.JoinType
-import io.getquill.ast.LeftJoin
-import io.getquill.ast.Map
-import io.getquill.ast.NullValue
-import io.getquill.ast.NumericOperator
-import io.getquill.ast.OptionExists
-import io.getquill.ast.OptionForall
-import io.getquill.ast.OptionMap
-import io.getquill.ast.OptionOperation
-import io.getquill.ast.Property
-import io.getquill.ast.PropertyAlias
-import io.getquill.ast.RightJoin
-import io.getquill.ast.SetOperator
-import io.getquill.ast.SimpleEntity
-import io.getquill.ast.SortBy
-import io.getquill.ast.StringOperator
-import io.getquill.ast.Take
-import io.getquill.ast.Tuple
-import io.getquill.ast.TupleOrdering
-import io.getquill.ast.UnaryOperation
-import io.getquill.ast.Union
-import io.getquill.ast.UnionAll
-import io.getquill.ast.Update
+import io.getquill.ast.{ Query => _, _ }
 import io.getquill.testContext._
 import io.getquill.context.WrappedEncodable
-import io.getquill.ast.Foreach
-import io.getquill.ast.ScalarBatchLift
 
 case class CustomAnyValue(i: Int) extends AnyVal
 
@@ -385,10 +329,10 @@ class QuotationSpec extends Spec {
           val list = List(1, 2)
           val delete = quote((i: Int) => qr1.filter(_.i == i).delete)
           val q = quote {
-            liftBatch(list).foreach(i => delete(i))
+            liftQuery(list).foreach(i => delete(i))
           }
           quote(unquote(q)).ast mustEqual
-            Foreach(ScalarBatchLift("q.list", list, intEncoder), Ident("i"), delete.ast.body)
+            Foreach(ScalarQueryLift("q.list", list, intEncoder), Ident("i"), delete.ast.body)
         }
         "unicode arrow must compile" in {
           """|quote {
@@ -431,21 +375,6 @@ class QuotationSpec extends Spec {
             val q = quote(Predef.ArrowAssoc("a"). -> [String]("b"))
             quote(unquote(q)).ast mustEqual Tuple(List(Constant("a"), Constant("b")))
           }
-        }
-      }
-      "collection" - {
-        val expectedAst = Collection(List(Constant(1), Constant(2)))
-        "seq" in {
-          val q = quote(Seq(1, 2))
-          quote(unquote(q)).ast mustEqual expectedAst
-        }
-        "list" in {
-          val q = quote(List(1, 2))
-          quote(unquote(q)).ast mustEqual expectedAst
-        }
-        "set" in {
-          val q = quote(Set(1, 2))
-          quote(unquote(q)).ast mustEqual expectedAst
         }
       }
     }
@@ -623,46 +552,21 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), SetOperator.`contains`, Ident("b"))
         }
-        "collections" - {
-          def verifyBody(body: Ast) = body mustEqual BinaryOperation(Ident("a"), SetOperator.`contains`, Ident("b"))
-          "Set" in {
-            val q = quote {
-              (a: Set[TestEntity], b: TestEntity) =>
-                a.contains(b)
-            }
-            verifyBody(q.ast.body)
-          }
-          "Seq" in {
-            val q = quote {
-              (a: Seq[TestEntity], b: TestEntity) =>
-                a.contains(b)
-            }
-            verifyBody(q.ast.body)
-          }
-          "List" in {
-            val q = quote {
-              (a: List[TestEntity], b: TestEntity) =>
-                a.contains(b)
-            }
-            verifyBody(q.ast.body)
-          }
-
-        }
         "within option operation" - {
           "forall" in {
-            val q = quote { (a: Set[Int], b: Option[Int]) =>
+            val q = quote { (a: Query[Int], b: Option[Int]) =>
               b.forall(a.contains)
             }
             quote(unquote(q)).ast.body mustBe an[OptionOperation]
           }
           "exists" in {
-            val q = quote { (a: Set[Int], b: Option[Int]) =>
+            val q = quote { (a: Query[Int], b: Option[Int]) =>
               b.exists(a.contains)
             }
             quote(unquote(q)).ast.body mustBe an[OptionOperation]
           }
           "map" in {
-            val q = quote { (a: Set[Int], b: Option[Int]) =>
+            val q = quote { (a: Query[Int], b: Option[Int]) =>
               b.map(a.contains)
             }
             quote(unquote(q)).ast.body mustBe an[OptionOperation]

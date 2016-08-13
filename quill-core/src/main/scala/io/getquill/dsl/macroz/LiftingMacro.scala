@@ -11,8 +11,8 @@ trait LiftingMacro {
   def lift[T](v: Tree)(implicit t: WeakTypeTag[T]): Tree =
     lift[T](v, "lift")
 
-  def liftBatch[T](v: Tree)(implicit t: WeakTypeTag[T]): Tree =
-    lift[T](v, "liftBatch")
+  def liftQuery[T](v: Tree)(implicit t: WeakTypeTag[T]): Tree =
+    lift[T](v, "liftQuery")
 
   private def lift[T](v: Tree, method: String)(implicit t: WeakTypeTag[T]): Tree =
     inferEncoder(t.tpe) match {

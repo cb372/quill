@@ -127,7 +127,7 @@ trait PeopleSpec extends Spec {
 
   val `Ex 8 and 9 contains` =
     quote {
-      (set: Set[Int]) =>
+      (set: Query[Int]) =>
         query[Person].filter(p => set.contains(p.age))
     }
 

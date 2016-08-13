@@ -141,9 +141,6 @@ trait StatefulTransformer[T] {
       case Tuple(a) =>
         val (at, att) = apply(a)(_.apply)
         (Tuple(at), att)
-      case Collection(a) =>
-        val (at, att) = apply(a)(_.apply)
-        (Collection(at), att)
       case Record(a, b) =>
         val (at, att) = apply(a.values.toList)(_.apply)
         val (bt, btt) = att.apply(b)

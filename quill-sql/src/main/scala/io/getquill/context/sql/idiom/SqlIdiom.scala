@@ -238,7 +238,6 @@ trait SqlIdiom extends Idiom {
     case Constant(v)         => stmt"${v.toString.token}"
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"${values.token}"
-    case Collection(values)  => stmt"${values.token}"
     case r: Record           => fail("Can't translate a record to SQL.")
   }
 

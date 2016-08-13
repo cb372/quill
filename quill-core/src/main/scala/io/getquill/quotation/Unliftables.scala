@@ -145,7 +145,6 @@ trait Unliftables {
     case q"$pack.NullValue" => NullValue
     case q"$pack.Constant.apply(${ Literal(c.universe.Constant(a)) })" => Constant(a)
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
-    case q"$pack.Collection.apply(${ a: List[Ast] })" => Collection(a)
     case q"$pack.Record.apply($p.collection.Map(..$fields), ${ b: Ast })" =>
       val f = fields.map {
         case q"${ a: Ident } -> ${ b: Ast }" => a -> b
@@ -157,9 +156,9 @@ trait Unliftables {
   }
 
   implicit val liftUnliftable: Unliftable[Lift] = Unliftable[Lift] {
-    case q"$pack.ScalarLift.apply(${ a: String }, $b, $c)"      => ScalarLift(a, b, c)
-    case q"$pack.CaseClassLift.apply(${ a: String }, $b)"       => CaseClassLift(a, b)
-    case q"$pack.ScalarBatchLift.apply(${ a: String }, $b, $c)" => ScalarBatchLift(a, b, c)
-    case q"$pack.CaseClassBatchLift.apply(${ a: String }, $b)"  => CaseClassBatchLift(a, b)
+    case q"$pack.ScalarValueLift.apply(${ a: String }, $b, $c)" => ScalarValueLift(a, b, c)
+    case q"$pack.CaseClassValueLift.apply(${ a: String }, $b)"  => CaseClassValueLift(a, b)
+    case q"$pack.ScalarQueryLift.apply(${ a: String }, $b, $c)" => ScalarQueryLift(a, b, c)
+    case q"$pack.CaseClassQueryLift.apply(${ a: String }, $b)"  => CaseClassQueryLift(a, b)
   }
 }

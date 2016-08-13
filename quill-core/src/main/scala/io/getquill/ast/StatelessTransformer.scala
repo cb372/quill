@@ -59,7 +59,6 @@ trait StatelessTransformer {
       case e: Constant             => e
       case NullValue               => NullValue
       case Tuple(values)           => Tuple(values.map(apply))
-      case Collection(values)      => Collection(values.map(apply))
       case Record(fields, default) => Record(fields.mapValues(apply), apply(default))
     }
 

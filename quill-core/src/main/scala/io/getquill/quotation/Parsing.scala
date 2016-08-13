@@ -98,15 +98,15 @@ trait Parsing extends EntityConfigParsing {
 
   val liftParser: Parser[Lift] = Parser[Lift] {
 
-    case q"$pack.liftScalar[$t]($value)($encoder)"          => ScalarLift(value.toString, value, encoder)
-    case q"$pack.liftCaseClass[$t]($value)"                 => CaseClassLift(value.toString, value)
+    case q"$pack.liftScalar[$t]($value)($encoder)"          => ScalarValueLift(value.toString, value, encoder)
+    case q"$pack.liftCaseClass[$t]($value)"                 => CaseClassValueLift(value.toString, value)
 
-    case q"$pack.liftBatchScalar[$t, $u]($value)($encoder)" => ScalarBatchLift(value.toString, value, encoder)
-    case q"$pack.liftBatchCaseClass[$t, $u]($value)"        => CaseClassBatchLift(value.toString, value)
+    case q"$pack.liftQueryScalar[$t, $u]($value)($encoder)" => ScalarQueryLift(value.toString, value, encoder)
+    case q"$pack.liftQueryCaseClass[$t, $u]($value)"        => CaseClassQueryLift(value.toString, value)
 
     // Unused, it's here only to make eclipse's presentation compiler happy :(
-    case q"$pack.lift[$t]($value)"                          => ScalarLift(value.toString, value, q"null")
-    case q"$pack.liftBatch[$t]($value)"                     => ScalarBatchLift(value.toString, value, q"null")
+    case q"$pack.lift[$t]($value)"                          => ScalarValueLift(value.toString, value, q"null")
+    case q"$pack.liftQuery[$t]($value)"                     => ScalarQueryLift(value.toString, value, q"null")
   }
 
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
@@ -375,8 +375,9 @@ trait Parsing extends EntityConfigParsing {
         case "nonEmpty" => SetOperator.`nonEmpty`
       }
     Parser[Operation] {
-      case q"$a.contains[..$t]($b)" => BinaryOperation(astParser(a), SetOperator.`contains`, astParser(b))
-      case unary(op)                => op
+      case q"$a.contains[$t]($b)" if (is[CoreDsl#Query[Any]])(a) =>
+        BinaryOperation(astParser(a), SetOperator.`contains`, astParser(b))
+      case unary(op) => op
     }
   }
 
@@ -386,15 +387,10 @@ trait Parsing extends EntityConfigParsing {
   private def is[T](tree: Tree)(implicit t: TypeTag[T]) =
     tree.tpe <:< t.tpe
 
-  private def isTraversable(tree: Tree) = {
-    tree.tpe <:< typeOf[Traversable[_]]
-  }
-
   val valueParser: Parser[Value] = Parser[Value] {
     case q"null" => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
     case q"((..$v))" if (v.size > 1) => Tuple(v.map(astParser(_)))
-    case tree @ q"$pack.$coll.apply[..$t](..$v)" if isTraversable(tree) => Collection(v.map(astParser(_)))
     case q"(($pack.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
   }
 
@@ -407,7 +403,7 @@ trait Parsing extends EntityConfigParsing {
       Delete(astParser(query))
     case q"$action.returning[$r](($alias) => $body)" =>
       Returning(astParser(action), identParser(alias), astParser(body))
-    case q"$query.foreach[$t](($alias) => $body)" =>
+    case tree @ q"$query.foreach[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](query)) =>
       Foreach(astParser(query), identParser(alias), astParser(body))
   }
 

@@ -1,3 +1,8 @@
+
+- Collection without lift not supported
+- liftQuery
+
+
 # 0.8.0 / 17-Jul-2016
 
 **see migration notes below**

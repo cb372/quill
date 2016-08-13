@@ -5,8 +5,6 @@ import io.getquill.WrappedType
 import scala.annotation.compileTimeOnly
 import io.getquill.quotation.NonQuotedException
 import scala.language.experimental.macros
-import io.getquill.ast.ScalarLift
-import io.getquill.util.Messages._
 
 trait EncodingDsl {
   this: CoreDsl =>
@@ -17,8 +15,6 @@ trait EncodingDsl {
   type Decoder[T] = io.getquill.context.Decoder[ResultRow, T]
 
   trait Encoder[-T] {
-    def expand(name: String, value: T): List[ScalarLift] =
-      List(ScalarLift(name, value, this))
     def apply(index: Int, value: T, row: PrepareRow): PrepareRow
   }
 
@@ -42,13 +38,13 @@ trait EncodingDsl {
 
   /* ************************************************************************** */
 
-  def liftBatch[B[_], T](v: B[T]): Query[T] = macro macroz.DslMacro.liftBatch[T]
-
-  //  @compileTimeOnly(NonQuotedException.message)
-  def liftBatchScalar[T, B[_]](v: B[T])(implicit e: Encoder[T]): Query[T] = NonQuotedException()
+  def liftQuery[U[_] <: Traversable[_], T](v: U[T]): Query[T] = macro macroz.DslMacro.liftQuery[T]
 
   @compileTimeOnly(NonQuotedException.message)
-  def liftBatchCaseClass[B[_], T](v: B[T]): Query[T] = NonQuotedException()
+  def liftQueryScalar[U[_] <: Traversable[_], T](v: U[T])(implicit e: Encoder[T]): Query[T] = NonQuotedException()
+
+  @compileTimeOnly(NonQuotedException.message)
+  def liftQueryCaseClass[U[_] <: Traversable[_], T](v: U[T]): Query[T] = NonQuotedException()
 
   /* ************************************************************************** */
 
@@ -70,13 +66,4 @@ trait EncodingDsl {
 
   implicit def wrappedTypeDecoder[T <: WrappedType] =
     MappedEncoding[T, T#Type](_.value)
-
-  implicit def traversableEncoder[T](implicit enc: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      override def expand(name: String, value: Traversable[T]): List[ScalarLift] =
-        value.map(ScalarLift(name, _, enc)).toList
-      override def apply(index: Int, values: Traversable[T], row: PrepareRow) =
-        // TODO Create tech debt issue
-        fail("Bug: Can't encode traversable directly, it should have been expanded.")
-    }
 }

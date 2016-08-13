@@ -157,7 +157,6 @@ class MirrorIdiom extends Idiom {
     case Constant(v)         => stmt"${v.toString.token}"
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"(${values.token})"
-    case Collection(values)  => stmt"Collection(${values.token})"
     case Record(fields, default) =>
       val f = fields.toList.map {
         case (name, ast) =>

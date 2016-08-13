@@ -9,13 +9,13 @@ import io.getquill.ast.Action
 object Normalize extends StatelessTransformer {
 
   override def apply(q: Ast): Ast =
-    super.apply(ApplyIntermediateMap(BetaReduction(q)))
+    super.apply(BetaReduction(q))
 
   override def apply(q: Action): Action =
-    super.apply(NormalizeReturning(q))
+    super.apply(ApplyIntermediateMap(NormalizeReturning(q)))
 
   override def apply(q: Query): Query =
-    super.apply(norm(AvoidCapture(q)))
+    ApplyIntermediateMap(norm(AvoidCapture(q)))
 
   private def norm(q: Query): Query =
     q match {

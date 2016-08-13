@@ -7,8 +7,8 @@ import io.getquill.dsl.EncodingDsl
 import io.getquill.dsl.macroz.LiftingMacro
 import io.getquill.norm.BetaReduction
 
-case class ScalarLifting[T, U](value: T, encoder: EncodingDsl#Encoder[U])
-case class CaseClassLifting[T](value: T)
+case class ScalarValueLifting[T, U](value: T, encoder: EncodingDsl#Encoder[U])
+case class CaseClassValueLifting[T](value: T)
 
 trait ReifyLiftings extends LiftingMacro {
   val c: MacroContext
@@ -26,10 +26,10 @@ trait ReifyLiftings extends LiftingMacro {
 
     private def reify(lift: Lift) =
       lift match {
-        case ScalarLift(name, value: Tree, encoder: Tree)      => Reified(value, Some(encoder))
-        case CaseClassLift(name, value: Tree)                  => Reified(value, None)
-        case ScalarBatchLift(name, value: Tree, encoder: Tree) => Reified(value, Some(encoder))
-        case CaseClassBatchLift(name, value: Tree)             => Reified(value, None)
+        case ScalarValueLift(name, value: Tree, encoder: Tree) => Reified(value, Some(encoder))
+        case CaseClassValueLift(name, value: Tree)             => Reified(value, None)
+        case ScalarQueryLift(name, value: Tree, encoder: Tree) => Reified(value, Some(encoder))
+        case CaseClassQueryLift(name, value: Tree)             => Reified(value, None)
       }
 
     override def apply(ast: Ast) =
@@ -38,11 +38,11 @@ trait ReifyLiftings extends LiftingMacro {
         case ast: Lift =>
           (ast, ReifyLiftings(state + (encode(ast.name) -> reify(ast))))
 
-        case Property(CaseClassLift(name, v: Tree), prop) =>
+        case Property(CaseClassValueLift(name, v: Tree), prop) =>
           val term = TermName(prop)
           val tpe = v.tpe.member(term).typeSignature
           val merge = q"$v.$term"
-          apply(ScalarLift(merge.toString, merge, inferRequiredEncoder(tpe)))
+          apply(ScalarValueLift(merge.toString, merge, inferRequiredEncoder(tpe)))
 
         case QuotedReference(ref: Tree, refAst) =>
           val newAst =
@@ -50,20 +50,18 @@ trait ReifyLiftings extends LiftingMacro {
               case lift: Lift =>
                 val nested =
                   q"""
-                    {
-                      import scala.language.reflectiveCalls
-                      $ref.$liftings.${encode(lift.name)}
-                    }  
+                    import scala.language.reflectiveCalls
+                    $ref.$liftings.${encode(lift.name)}
                   """
                 lift match {
-                  case ScalarLift(name, value, encoder) =>
-                    ScalarLift(s"$ref.$name", q"$nested.value", q"$nested.encoder")
-                  case CaseClassLift(name, value) =>
-                    CaseClassLift(s"$ref.$name", q"$nested.value")
-                  case ScalarBatchLift(name, value, encoder) =>
-                    ScalarBatchLift(s"$ref.$name", q"$nested.value", q"$nested.encoder")
-                  case CaseClassBatchLift(name, value) =>
-                    CaseClassBatchLift(s"$ref.$name", q"$nested.value")
+                  case ScalarValueLift(name, value, encoder) =>
+                    ScalarValueLift(s"$ref.$name", q"$nested.value", q"$nested.encoder")
+                  case CaseClassValueLift(name, value) =>
+                    CaseClassValueLift(s"$ref.$name", q"$nested.value")
+                  case ScalarQueryLift(name, value, encoder) =>
+                    ScalarQueryLift(s"$ref.$name", q"$nested.value", q"$nested.encoder")
+                  case CaseClassQueryLift(name, value) =>
+                    CaseClassQueryLift(s"$ref.$name", q"$nested.value")
                 }
             }
           apply(newAst)
@@ -82,9 +80,9 @@ trait ReifyLiftings extends LiftingMacro {
               for ((name, Reified(value, encoder)) <- transformer.state) yield {
                 encoder match {
                   case Some(encoder) =>
-                    q"val $name = io.getquill.quotation.ScalarLifting($value, $encoder)"
+                    q"val $name = io.getquill.quotation.ScalarValueLifting($value, $encoder)"
                   case None =>
-                    q"val $name = io.getquill.quotation.CaseClassLifting($value)"
+                    q"val $name = io.getquill.quotation.CaseClassValueLifting($value)"
                 }
               }
             (ast, q"val $liftings = new { ..$trees }")

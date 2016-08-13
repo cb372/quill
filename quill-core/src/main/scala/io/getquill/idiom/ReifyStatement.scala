@@ -1,20 +1,18 @@
 package io.getquill.idiom
 
-import io.getquill.dsl.EncodingDsl
-import io.getquill.ast.ScalarLift
-import io.getquill.util.Interleave
+import io.getquill.ast._
 
 object ReifyStatement {
 
-  def forExecution(liftingPlaceholder: Int => String, statement: Statement): (String, List[ScalarLift]) = ???
+  def forExecution(liftingPlaceholder: Int => String, statement: Statement): (String, List[ScalarValueLift]) = ???
   def forProbing(liftingPlaceholder: Int => String, statement: Statement): String = ???
 
   def apply(liftingPlaceholder: Int => String, statement: Statement, forProbing: Boolean): (String, List[ScalarLift]) = {
     def apply(acc: (String, List[ScalarLift]), token: Token): (String, List[ScalarLift]) =
       (acc, token) match {
-        case ((s1, liftings), StringToken(s2))    => (s"$s1$s2", liftings)
-        case ((s1, liftings), Statement(tokens))  => tokens.foldLeft((s1, liftings))(apply)
-        case ((s1, liftings), LiftingToken(lift)) => (s"$s1${liftingPlaceholder(liftings.size)}", liftings :+ lift)
+        case ((s1, liftings), StringToken(s2))       => (s"$s1$s2", liftings)
+        case ((s1, liftings), Statement(tokens))     => tokens.foldLeft((s1, liftings))(apply)
+        case ((s1, liftings), ScalarLiftToken(lift)) => (s"$s1${liftingPlaceholder(liftings.size)}", liftings :+ lift)
       }
     val expanded =
       forProbing match {
@@ -22,11 +20,10 @@ object ReifyStatement {
         case false =>
           Statement {
             statement.tokens.foldLeft(List.empty[Token]) {
-              case (tokens, LiftingToken(lift)) =>
-                val encoder = lift.encoder.asInstanceOf[EncodingDsl#Encoder[Any]]
-                val liftings = encoder.expand(lift.name, lift.value).map(LiftingToken)
-                val separators = List.fill(liftings.size - 1)(StringToken(","))
-                tokens ++ Interleave(liftings, separators)
+              case (tokens, ScalarLiftToken(lift: ScalarQueryLift)) =>
+                val values = lift.value.asInstanceOf[Traversable[Any]].toList
+                val liftings = values.map(v => ScalarLiftToken(ScalarValueLift(lift.name, v, lift.encoder)))
+                tokens ++ liftings
               case (tokens, token) =>
                 tokens :+ token
             }

@@ -1,6 +1,6 @@
 package io.getquill.idiom
 
-import io.getquill.ast.ScalarLift
+import io.getquill.ast._
 
 sealed trait Token
 
@@ -8,7 +8,7 @@ case class StringToken(string: String) extends Token {
   override def toString = string
 }
 
-case class LiftingToken(lift: ScalarLift) extends Token {
+case class ScalarLiftToken(lift: ScalarLift) extends Token {
   override def toString = s"lift(${lift.name})"
 }
 

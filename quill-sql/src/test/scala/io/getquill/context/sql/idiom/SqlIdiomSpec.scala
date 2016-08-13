@@ -1,7 +1,6 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.Spec
-import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext
 import io.getquill.context.sql.testContext._
 
@@ -579,42 +578,6 @@ class SqlIdiomSpec extends Spec {
             testContext.run(q).string mustEqual
               "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (SELECT p.i FROM TestEntity2 p)"
           }
-          "collection" - {
-            "as value" in {
-              val expectedSql = "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (1, 2)"
-              val q1 = quote {
-                qr1.filter(t => List(1, 2).contains(t.i))
-              }
-              val q2 = quote {
-                qr1.filter(t => Seq(1, 2).contains(t.i))
-              }
-              val q3 = quote {
-                qr1.filter(t => Set(1, 2).contains(t.i))
-              }
-              testContext.run(q1).string mustEqual expectedSql
-              testContext.run(q2).string mustEqual expectedSql
-              testContext.run(q3).string mustEqual expectedSql
-            }
-            "as param" in {
-              def verify[T](mirror: testContext.QueryMirror[_], params: List[T]) = {
-                mirror.string mustEqual
-                  "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (?,?)"
-                mirror.prepareRow mustEqual Row(params: _*)
-              }
-              val q1 = quote { (is: List[Int]) =>
-                qr1.filter(t => is.contains(t.i))
-              }
-              val q2 = quote { (is: Seq[Int]) =>
-                qr1.filter(t => is.contains(t.i))
-              }
-              val q3 = quote { (is: Set[Int]) =>
-                qr1.filter(t => is.contains(t.i))
-              }
-              verify(testContext.run(q1(lift(List(1, 2)))), List(1, 2))
-              verify(testContext.run(q2(lift(Seq(1, 2)))), List(1, 2))
-              verify(testContext.run(q3(lift(Set(1, 2)))), List(1, 2))
-            }
-          }
         }
       }
     }
@@ -885,7 +848,7 @@ class SqlIdiomSpec extends Spec {
       }
 
       // TODO open issue
-      "aggregated" in pendingUntilFixed {
+      "aggregated" in {
         val q = quote {
           query[TestEntity].map { a =>
             val (b, c) = (query[TestEntity2], query[TestEntity3])

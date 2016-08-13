@@ -37,7 +37,7 @@ class ContextInstanceSpec extends Spec {
   "encoding set" in {
     case class Entity(i: Int)
     val q = quote {
-      query[Entity].filter(e => lift(Set(1)).contains(e.i))
+      query[Entity].filter(e => liftQuery(Set(1)).contains(e.i))
     }
     testContext.run(q).prepareRow mustEqual Row(1)
   }

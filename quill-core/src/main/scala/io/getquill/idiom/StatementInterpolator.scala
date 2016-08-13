@@ -2,6 +2,7 @@ package io.getquill.idiom
 
 import io.getquill.ast._
 import io.getquill.util.Interleave
+import io.getquill.util.Messages._
 
 object StatementInterpolator {
 
@@ -26,14 +27,14 @@ object StatementInterpolator {
 
   implicit def liftTokenizer: Tokenizer[Lift] =
     Tokenizer[Lift] {
-      case lift: ScalarLift => LiftingToken(lift)
-      case _                => throw new IllegalStateException("Can't tokenize a non-scalar lifting")
+      case lift: ScalarLift => ScalarLiftToken(lift)
+      case lift             => fail(s"Can't tokenize a non-scalar lifting.")
     }
 
   implicit def tokenTokenizer: Tokenizer[Token] = Tokenizer[Token](identity)
   implicit def statementTokenizer: Tokenizer[Statement] = Tokenizer[Statement](identity)
   implicit def stringTokenTokenizer: Tokenizer[StringToken] = Tokenizer[StringToken](identity)
-  implicit def liftingTokenTokenizer: Tokenizer[LiftingToken] = Tokenizer[LiftingToken](identity)
+  implicit def liftingTokenTokenizer: Tokenizer[ScalarLiftToken] = Tokenizer[ScalarLiftToken](identity)
 
   implicit class TokenList[T](list: List[T])(implicit tokenize: Tokenizer[T]) {
     def mkStmt(sep: String = ", ")(implicit tokenize: Tokenizer[T]) = {

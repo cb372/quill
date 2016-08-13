@@ -405,27 +405,6 @@ class MirrorIdiomSpec extends Spec {
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(null, 1, "a")"""
     }
-    "collection" - {
-      def verify(ast: Ast) = stmt"${(ast: Ast).token}" mustEqual stmt"Collection(1, 2, 3)"
-      "set" in {
-        val q = quote {
-          Set(1, 2, 3)
-        }
-        verify(q.ast)
-      }
-      "list" in {
-        val q = quote {
-          List(1, 2, 3)
-        }
-        verify(q.ast)
-      }
-      "seq" in {
-        val q = quote {
-          Seq(1, 2, 3)
-        }
-        verify(q.ast)
-      }
-    }
   }
 
   "shows idents" in {

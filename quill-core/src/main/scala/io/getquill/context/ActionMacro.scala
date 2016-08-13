@@ -73,10 +73,10 @@ class ActionMacro(val c: MacroContext)
           case q"($param) => $value" =>
             val nestedLift =
               lift match {
-                case ScalarBatchLift(name, batch: Tree, encoder: Tree) =>
-                  ScalarLift("value", value, encoder)
-                case CaseClassBatchLift(name, batch: Tree) =>
-                  CaseClassLift("value", value)
+                case ScalarQueryLift(name, batch: Tree, encoder: Tree) =>
+                  ScalarValueLift("value", value, encoder)
+                case CaseClassQueryLift(name, batch: Tree) =>
+                  CaseClassValueLift("value", value)
               }
             val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
             c.untypecheck {

@@ -132,10 +132,9 @@ trait Liftables {
   }
 
   implicit val valueLiftable: Liftable[Value] = Liftable[Value] {
-    case NullValue     => q"$pack.NullValue"
-    case Constant(a)   => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
-    case Tuple(a)      => q"$pack.Tuple($a)"
-    case Collection(a) => q"$pack.Collection($a)"
+    case NullValue   => q"$pack.NullValue"
+    case Constant(a) => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
+    case Tuple(a)    => q"$pack.Tuple($a)"
     case Record(fields, default) =>
       val f = fields.toList.map {
         case (name, ast) =>
@@ -148,9 +147,9 @@ trait Liftables {
   }
 
   implicit val liftLiftable: Liftable[Lift] = Liftable[Lift] {
-    case ScalarLift(a, b: Tree, c: Tree)      => q"$pack.ScalarLift($a, $b, $c)"
-    case CaseClassLift(a, b: Tree)            => q"$pack.CaseClassLift($a, $b)"
-    case ScalarBatchLift(a, b: Tree, c: Tree) => q"$pack.ScalarBatchLift($a, $b, $c)"
-    case CaseClassBatchLift(a, b: Tree)       => q"$pack.CaseClassBatchLift($a, $b)"
+    case ScalarValueLift(a, b: Tree, c: Tree) => q"$pack.ScalarValueLift($a, $b, $c)"
+    case CaseClassValueLift(a, b: Tree)       => q"$pack.CaseClassValueLift($a, $b)"
+    case ScalarQueryLift(a, b: Tree, c: Tree) => q"$pack.ScalarQueryLift($a, $b, $c)"
+    case CaseClassQueryLift(a, b: Tree)       => q"$pack.CaseClassQueryLift($a, $b)"
   }
 }
