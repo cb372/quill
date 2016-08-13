@@ -51,10 +51,15 @@ object ApplyIntermediateMap extends StatelessTransformer {
       case q @ Drop(Map(a: GroupBy, b, c), d)         => q
       case q @ Map(a: GroupBy, b, c) if (b == c)      => q
 
-      //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
+      // a.map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
       //    map(i => (i.i, i.l)).distinct
       case Map(Distinct(Map(a, b, c)), d, e) if isomorphic(e, c, d) =>
         Distinct(Map(a, b, c))
+
+      // a.map(b => c: Record).distinct =>
+      //   a.distinct.map(b => record)
+      case Distinct(Map(a, b, c: Record)) =>
+        Map(Distinct(a), b, c)
 
       // a.map(b => b) =>
       //    a

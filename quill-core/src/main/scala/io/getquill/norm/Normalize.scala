@@ -12,7 +12,7 @@ object Normalize extends StatelessTransformer {
     super.apply(BetaReduction(q))
 
   override def apply(q: Action): Action =
-    super.apply(ApplyIntermediateMap(NormalizeReturning(q)))
+    NormalizeReturning(ApplyIntermediateMap(super.apply(q)))
 
   override def apply(q: Query): Query =
     ApplyIntermediateMap(norm(AvoidCapture(q)))

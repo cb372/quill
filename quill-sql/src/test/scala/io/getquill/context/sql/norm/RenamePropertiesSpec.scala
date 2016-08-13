@@ -1,4 +1,4 @@
-package io.getquill.context.string.norm
+package io.getquill.context.sql.norm
 
 import io.getquill.Spec
 import io.getquill.context.sql.testContext._
@@ -20,7 +20,7 @@ class RenamePropertiesSpec extends Spec {
         val q = quote {
           e.insert(lift(TestEntity("a", 1, 1L, None)))
         }
-        testContext.run(q.dynamic).string mustEqual
+        testContext.run(q).string mustEqual
           "INSERT INTO test_entity (field_s,field_i,l,o) VALUES (?, ?, ?, ?)"
       }
 
@@ -35,7 +35,7 @@ class RenamePropertiesSpec extends Spec {
         val q = quote {
           e.filter(_.i == 999).update(lift(TestEntity("a", 1, 1L, None)))
         }
-        testContext.run(q.dynamic).string mustEqual
+        testContext.run(q).string mustEqual
           "UPDATE test_entity SET field_s = ?, field_i = ?, l = ?, o = ? WHERE field_i = 999"
       }
       "delete" in {
@@ -51,7 +51,7 @@ class RenamePropertiesSpec extends Spec {
         val q = quote {
           e.insert(lift(TestEntity("s", 1, 1L, None))).returning(_.i)
         }
-        val mirror = testContext.run(q)
+        val mirror = testContext.run(q.dynamic)
         mirror.returningColumn mustEqual "field_i"
       }
     }
@@ -132,7 +132,7 @@ class RenamePropertiesSpec extends Spec {
           e.take(1).map(t => t.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_s FROM test_entity t LIMIT 1"
+          "SELECT x.field_s FROM test_entity x LIMIT 1"
       }
     }
     "drop" - {
@@ -148,23 +148,23 @@ class RenamePropertiesSpec extends Spec {
           e.drop(1).map(t => t.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_s FROM test_entity t OFFSET 1"
+          "SELECT x.field_s FROM test_entity x OFFSET 1"
       }
     }
     "distinct" - {
-      //      "body" in {
-      //        val q = quote {
-      //          e.distinct
-      //        }
-      //        testContext.run(q).string mustEqual
-      //          "SELECT DISTINCT x.* FROM test_entity x"
-      //      }
+      "body" in {
+        val q = quote {
+          e.distinct
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT DISTINCT x.field_s, x.field_i, x.l, x.o FROM test_entity x) x"
+      }
       "transitive" in {
         val q = quote {
           e.distinct.map(t => t.s)
         }
-        testContext.run(q).string mustEqual
-          "SELECT t.field_s FROM (SELECT DISTINCT x.field_s FROM test_entity x) t"
+        testContext.run(q.dynamic).string mustEqual
+          "SELECT x.field_s FROM (SELECT DISTINCT x.field_s FROM test_entity x) x"
       }
     }
 
