@@ -7,6 +7,8 @@ trait Idiom {
 
   def liftingPlaceholder(index: Int): String
 
+  def emptyQuery: String
+
   def translate(ast: Ast)(implicit naming: NamingStrategy): Statement
 
   def prepareForProbing(statement: Statement): Statement

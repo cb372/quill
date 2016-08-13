@@ -57,5 +57,6 @@ trait JdbcEncoders {
     encoder[util.Date](
       row => (idx, value) =>
         row.setTimestamp(idx, new sql.Timestamp(value.getTime), Calendar.getInstance(dateTimeZone)),
-      Types.TIMESTAMP)
+      Types.TIMESTAMP
+    )
 }

@@ -29,6 +29,8 @@ trait SqlIdiom extends Idiom {
 
   override def prepareForProbing(statement: Statement): Statement
 
+  override def emptyQuery = "SELECT 0 FROM (SELECT 0) AS QUILL_EMPTY_SET WHERE 1 = 0"
+
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
     val token =
       SqlNormalize(ast) match {

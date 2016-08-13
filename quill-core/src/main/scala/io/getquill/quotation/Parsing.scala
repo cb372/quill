@@ -106,7 +106,7 @@ trait Parsing extends EntityConfigParsing {
 
     // Unused, it's here only to make eclipse's presentation compiler happy :(
     case q"$pack.lift[$t]($value)"                          => ScalarValueLift(value.toString, value, q"null")
-    case q"$pack.liftQuery[$t]($value)"                     => ScalarQueryLift(value.toString, value, q"null")
+    case q"$pack.liftQuery[$t, $u]($value)"                 => ScalarQueryLift(value.toString, value, q"null")
   }
 
   val quotedAstParser: Parser[Ast] = Parser[Ast] {

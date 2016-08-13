@@ -57,6 +57,7 @@ trait ContextMacro extends Quotation {
         val (string, _) =
           ReifyStatement(
             idiom.liftingPlaceholder,
+            idiom.emptyQuery,
             idiom.prepareForProbing(statement),
             forProbing = true
           )

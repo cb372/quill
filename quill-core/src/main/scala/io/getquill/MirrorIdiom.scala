@@ -11,9 +11,11 @@ object MirrorIdiom extends MirrorIdiom
 
 class MirrorIdiom extends Idiom {
 
-  def prepareForProbing(statement: Statement) = statement
+  override def prepareForProbing(statement: Statement) = statement
 
-  def liftingPlaceholder(index: Int): String = "?"
+  override def liftingPlaceholder(index: Int): String = "?"
+
+  override def emptyQuery = ""
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy): Statement =
     stmt"${Normalize(ast).token}"
