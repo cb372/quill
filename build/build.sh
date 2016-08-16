@@ -33,5 +33,6 @@ then
 		sbt "project quill-with-js" coverageOff publish
 	fi
 else
-	sbt "project quill-with-js" clean coverage test tut coverageAggregate checkUnformattedFiles
+	// TODO add tut again
+	sbt "project quill-with-js" clean coverage test coverageAggregate checkUnformattedFiles
 fi
