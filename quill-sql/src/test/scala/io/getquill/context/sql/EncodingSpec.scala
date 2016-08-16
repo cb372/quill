@@ -164,7 +164,7 @@ trait EncodingSpec extends Spec {
   case class BarCode(description: String, uuid: Option[UUID] = None)
 
   val insertBarCode = quote((b: BarCode) => query[BarCode].insert(b).returning(_.uuid))
-  val barCodeEntry = List(BarCode("returning UUID"))
+  val barCodeEntry = BarCode("returning UUID")
 
   def findBarCodeByUuid(uuid: UUID)(implicit enc: Encoder[UUID]) = quote(query[BarCode].filter(_.uuid == lift(uuid)))
 

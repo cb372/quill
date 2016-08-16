@@ -31,7 +31,7 @@ trait ContextMacro extends Quotation {
     """
 
   protected def extractAst[T](quoted: Tree): Ast =
-    unquote[Ast](quoted)
+    unquote[Ast](c.typecheck(q"quote($quoted)"))
       .map(VerifyFreeVariables(c))
       .getOrElse {
         Dynamic(quoted)

@@ -2,17 +2,17 @@ package io.getquill
 
 import io.getquill.idiom.StatementInterpolator._
 import java.util.concurrent.atomic.AtomicInteger
-import io.getquill.context.sql.idiom.PositionalBindVariables
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Operation
 import io.getquill.ast.Property
 import io.getquill.ast.StringOperator
 import io.getquill.idiom.Statement
+import io.getquill.context.sql.idiom.QuestionMarkBindVariables
 
 trait PostgresDialect
   extends SqlIdiom
-  with PositionalBindVariables {
+  with QuestionMarkBindVariables {
 
   override implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] =
     Tokenizer[Operation] {

@@ -33,8 +33,8 @@ class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: Dat
   private val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[JdbcContext[_, _]]))
 
-  type PrepareRow = PreparedStatement
-  type ResultRow = ResultSet
+  override type PrepareRow = PreparedStatement
+  override type ResultRow = ResultSet
 
   override type RunQueryResult[T] = List[T]
   override type RunQuerySingleResult[T] = T

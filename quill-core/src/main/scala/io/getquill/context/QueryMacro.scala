@@ -26,7 +26,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro with SelectFlattening
     }
     val (flattenAst, selectValues) = flattenSelect(query, t.tpe, Encoding.inferDecoder(c))
     val extractor = selectResultExtractor(selectValues)
-    q"""
+    val r = q"""
       val expanded = ${expand(flattenAst)}
       ${c.prefix}.${TermName(method)}(
         expanded.string,
@@ -34,5 +34,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro with SelectFlattening
         $extractor
       )  
     """
+    c.info(c.enclosingPosition, ast.toString, true)
+    r
   }
 }

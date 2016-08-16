@@ -34,12 +34,12 @@ trait DepartmentsSpec extends Spec {
 
   val employeeEntries =
     List(
-      Employee("Product", "Alex"),
-      Employee("Product", "Bert"),
-      Employee("Research", "Cora"),
-      Employee("Research", "Drew"),
-      Employee("Research", "Edna"),
-      Employee("Sales", "Fred")
+      Employee("Alex", "Product"),
+      Employee("Bert", "Product"),
+      Employee("Cora", "Research"),
+      Employee("Drew", "Research"),
+      Employee("Edna", "Research"),
+      Employee("Fred", "Sales")
     )
 
   val taskInsert =
