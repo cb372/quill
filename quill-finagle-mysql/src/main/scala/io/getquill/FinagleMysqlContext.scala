@@ -25,12 +25,11 @@ import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 
 class FinagleMysqlContext[N <: NamingStrategy](
-  client:                             Client with Transactions,
-  private[getquill] val dateTimezone: TimeZone                 = TimeZone.getDefault
-)
-  extends SqlContext[MySQLDialect, N]
-  with FinagleMysqlDecoders
-  with FinagleMysqlEncoders {
+  client: Client with Transactions,
+  private[getquill] val dateTimezone: TimeZone = TimeZone.getDefault)
+    extends SqlContext[MySQLDialect, N]
+    with FinagleMysqlDecoders
+    with FinagleMysqlEncoders {
 
   def this(config: FinagleMysqlContextConfig) = this(config.client, config.dateTimezone)
   def this(config: Config) = this(FinagleMysqlContextConfig(config))
@@ -85,21 +84,31 @@ class FinagleMysqlContext[N <: NamingStrategy](
       .map(r => toOk(r).insertId)
   }
 
-  def executeBatchAction[B](batch: List[B], prepare: B => (String, List[Parameter] => List[Parameter])): Future[List[Long]] =
-    batch.map(prepare).foldLeft(Future.value(List.empty[Long])) {
-      case (acc, (sql, prepare)) =>
-        acc.flatMap { list =>
-          executeAction(sql, prepare).map(list :+ _)
-        }
-    }
+  def executeBatchAction[B](groups: List[BatchGroup]): Future[List[Long]] =
+    Future.collect {
+      groups.map {
+        case BatchGroup(sql, prepare) =>
+          prepare.foldLeft(Future.value(List.empty[Long])) {
+            case (acc, prepare) =>
+              acc.flatMap { list =>
+                executeAction(sql, prepare).map(list :+ _)
+              }
+          }
+      }
+    }.map(_.flatten.toList)
 
-  def executeBatchActionReturning[B, T](batch: List[B], prepare: B => (String, List[Parameter] => List[Parameter], String), extractor: Row => T): Future[List[Long]] =
-    batch.map(prepare).foldLeft(Future.value(List.empty[Long])) {
-      case (acc, (sql, prepare, column)) =>
-        acc.flatMap { list =>
-          executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
-        }
-    }
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Row => T): Future[List[Long]] =
+    Future.collect {
+      groups.map {
+        case BatchGroupReturning(sql, column, prepare) =>
+          prepare.foldLeft(Future.value(List.empty[Long])) {
+            case (acc, prepare) =>
+              acc.flatMap { list =>
+                executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
+              }
+          }
+      }
+    }.map(_.flatten.toList)
 
   private def toOk(result: Result) =
     result match {

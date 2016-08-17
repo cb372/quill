@@ -1,9 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill.ast._
-import io.getquill.ast.AstShow._
 import io.getquill.util.Messages.fail
-import io.getquill.util.Show._
 
 case class CqlQuery(
   entity:   Entity,
@@ -72,7 +70,7 @@ object CqlQuery {
       case (_: Union) | (_: UnionAll) =>
         fail(s"Cql doesn't support union/unionAll.")
       case Join(joinType, _, _, _, _, _) =>
-        fail(s"Cql doesn't support ${joinType.show}.")
+        fail(s"Cql doesn't support $joinType.")
       case _: GroupBy =>
         fail(s"Cql doesn't support groupBy.")
       case q =>

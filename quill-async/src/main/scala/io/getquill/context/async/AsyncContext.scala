@@ -19,9 +19,9 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
 
 abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](pool: PartitionedConnectionPool[C])
-  extends SqlContext[D, N]
-  with Decoders
-  with Encoders {
+    extends SqlContext[D, N]
+    with Decoders
+    with Encoders {
 
   private val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[AsyncContext[_, _, _]]))
@@ -86,20 +86,29 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       .map(extractActionResult(returningColumn, extractor))
   }
 
-  def executeBatchAction[B](batch: List[B], prepare: B => (String, List[Any] => List[Any]))(implicit ec: ExecutionContext): Future[List[Long]] =
-    batch.map(prepare).foldLeft(Future.successful(List.empty[Long])) {
-      case (acc, (sql, prepare)) =>
-        acc.flatMap { list =>
-          executeAction(sql, prepare).map(list :+ _)
-        }
-    }
+  def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext): Future[List[Long]] =
+    Future.sequence {
+      groups.map {
+        case BatchGroup(sql, prepare) =>
+          prepare.foldLeft(Future.successful(List.empty[Long])) {
+            case (acc, prepare) =>
+              acc.flatMap { list =>
+                executeAction(sql, prepare).map(list :+ _)
+              }
+          }
+      }
+    }.map(_.flatten.toList)
 
-  def executeBatchActionReturning[B, T](batch: List[B], prepare: B => (String, List[Any] => List[Any], String), extractor: RowData => T)(implicit ec: ExecutionContext): Future[List[T]] =
-    batch.map(prepare).foldLeft(Future.successful(List.empty[T])) {
-      case (acc, (sql, prepare, column)) =>
-        acc.flatMap { list =>
-          executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
-        }
-    }
-
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: RowData => T)(implicit ec: ExecutionContext): Future[List[T]] =
+    Future.sequence {
+      groups.map {
+        case BatchGroupReturning(sql, column, prepare) =>
+          prepare.foldLeft(Future.successful(List.empty[T])) {
+            case (acc, prepare) =>
+              acc.flatMap { list =>
+                executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
+              }
+          }
+      }
+    }.map(_.flatten.toList)
 }

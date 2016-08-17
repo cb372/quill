@@ -20,7 +20,7 @@ class ActionMacro(val c: MacroContext)
       val expanded = ${expand(extractAst(quoted))}
       ${c.prefix}.executeAction(
         expanded.string,
-        expanded.bind
+        expanded.prepare
       )
     """
 
@@ -29,7 +29,7 @@ class ActionMacro(val c: MacroContext)
       val expanded = ${expand(extractAst(quoted))}
       ${c.prefix}.executeActionReturning(
         expanded.string,
-        expanded.bind,
+        expanded.prepare,
         ${returningExtractor(t.tpe)},
         $returningColumn
       )
@@ -37,34 +37,38 @@ class ActionMacro(val c: MacroContext)
 
   def runBatchAction(quoted: Tree): Tree =
     expandBatchAction(quoted) {
-      case (batchItemType, batch, param, expanded) =>
+      case (batch, param, expanded) =>
         q"""
-          ${c.prefix}.executeBatchAction[$batchItemType](
-            $batch,
-            $param => {
+          ${c.prefix}.executeBatchAction(
+            $batch.map { $param => 
               val expanded = $expanded
-              (expanded.string, expanded.bind)
-            }
+              (expanded.string, expanded.prepare)
+            }.groupBy(_._1).map {
+              case (string, items) =>
+                ${c.prefix}.BatchGroup(string, items.map(_._2))
+            }.toList
           )
         """
     }
 
   def runBatchActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandBatchAction(quoted) {
-      case (batchItemType, batch, param, expanded) =>
+      case (batch, param, expanded) =>
         q"""
-          ${c.prefix}.executeBatchActionReturning[$batchItemType, $t](
-            $batch,
-            $param => {
+          ${c.prefix}.executeBatchActionReturning(
+            $batch.map { $param => 
               val expanded = $expanded
-              (expanded.string, expanded.bind, $returningColumn)
-            },
+              ((expanded.string, $returningColumn), expanded.prepare)
+            }.groupBy(_._1).map {
+              case ((string, column), items) =>
+                ${c.prefix}.BatchGroupReturning(string, column, items.map(_._2))
+            }.toList,
             ${returningExtractor(t.tpe)}
           )
         """
     }
 
-  def expandBatchAction(quoted: Tree)(call: (Type, Tree, Tree, Tree) => Tree): Tree =
+  def expandBatchAction(quoted: Tree)(call: (Tree, Tree, Tree) => Tree): Tree =
     BetaReduction(extractAst(quoted)) match {
       case ast @ Foreach(lift: Lift, alias, body) =>
         val batch = lift.value.asInstanceOf[Tree]
@@ -80,7 +84,7 @@ class ActionMacro(val c: MacroContext)
               }
             val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
             c.untypecheck {
-              call(batchItemType, batch, param, expand(ast))
+              call(batch, param, expand(ast))
             }
         }
       case other =>

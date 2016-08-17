@@ -50,7 +50,7 @@ private[dsl] trait QueryDsl {
 
     def distinct: Query[T]
 
-    def foreach[A <: Action](f: T => A): BatchAction[A]
+    def foreach[A <: Action[_]](f: T => A): BatchAction[A]
   }
 
   sealed trait JoinQuery[A, B, R] extends Query[R] {
@@ -69,10 +69,10 @@ private[dsl] trait QueryDsl {
     def insert(value: T): Insert[T] = macro macroz.DslMacro.expandInsert[T]
     def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T]
 
-    def update(value: T): Update = macro macroz.DslMacro.expandUpdate[T]
-    def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update
+    def update(value: T): Update[T] = macro macroz.DslMacro.expandUpdate[T]
+    def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T]
 
-    def delete: Delete
+    def delete: Delete[T]
   }
 
   sealed trait Schema[T] {
@@ -80,16 +80,16 @@ private[dsl] trait QueryDsl {
     def columns(propertyAlias: (T => (Any, String))*): Schema[T]
   }
 
-  sealed trait Action
+  sealed trait Action[Entity]
 
-  sealed trait Insert[Entity] extends Action {
+  sealed trait Insert[Entity] extends Action[Entity] {
     @compileTimeOnly(NonQuotedException.message)
-    def returning[R](f: Entity => R): ActionReturning[R] = NonQuotedException()
+    def returning[R](f: Entity => R): ActionReturning[Entity, R] = NonQuotedException()
   }
 
-  sealed trait ActionReturning[Output] extends Action
-  sealed trait Update extends Action
-  sealed trait Delete extends Action
+  sealed trait ActionReturning[Entity, Output] extends Action[Entity]
+  sealed trait Update[Entity] extends Action[Entity]
+  sealed trait Delete[Entity] extends Action[Entity]
 
-  sealed trait BatchAction[+A <: Action]
+  sealed trait BatchAction[+A <: Action[_]]
 }

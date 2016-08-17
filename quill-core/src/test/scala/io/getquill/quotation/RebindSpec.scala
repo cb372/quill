@@ -7,8 +7,8 @@ import io.getquill.testContext
 class RebindSpec extends Spec {
 
   "rebind non-arg function" in {
-    implicit class ReturnId[T](action: Action) {
-      def returnId = quote(infix"$action RETURNING ID".as[Action])
+    implicit class ReturnId[T](action: Action[T]) {
+      def returnId = quote(infix"$action RETURNING ID".as[Action[T]])
     }
     val q = quote {
       unquote(query[TestEntity].insert(e => e.i -> lift(1)).returnId)

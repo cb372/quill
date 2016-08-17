@@ -14,16 +14,16 @@ class CassandraContextMacroSpec extends Spec {
         (a: Int) => qr1.filter(t => t.i == a)
       }
       val mirror = mirrorContext.run(q)(1)
-      mirror.cql mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
-      mirror.binds mustEqual Row(1)
+      mirror.string mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
+      mirror.prepareRow mustEqual Row(1)
     }
     "dynamic" in {
       val q: Quoted[Int => Query[TestEntity]] = quote {
         (a: Int) => qr1.filter(t => t.i == a)
       }
       val mirror = mirrorContext.run(q)(1)
-      mirror.cql mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
-      mirror.binds mustEqual Row(1)
+      mirror.string mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
+      mirror.prepareRow mustEqual Row(1)
     }
   }
 
@@ -43,7 +43,7 @@ class CassandraContextMacroSpec extends Spec {
           qr1.filter(t => t.i == i).update(t => t.l -> l)
       }
       val mirror = mirrorContext.run(q)(List((1, 2L)))
-      mirror.cql mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
+      mirror.string mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
       mirror.bindList mustEqual List(Row(2l, 1))
     }
     "filter.map" in {
@@ -52,8 +52,8 @@ class CassandraContextMacroSpec extends Spec {
           qr1.filter(t => t.i == i).map(t => l)
       }
       val mirror = mirrorContext.run(q)(1, 2L)
-      mirror.cql mustEqual "SELECT ? FROM TestEntity WHERE i = ?"
-      mirror.binds mustEqual Row(2l, 1)
+      mirror.string mustEqual "SELECT ? FROM TestEntity WHERE i = ?"
+      mirror.prepareRow mustEqual Row(2l, 1)
     }
   }
 }

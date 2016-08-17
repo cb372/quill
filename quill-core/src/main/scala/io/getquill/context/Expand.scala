@@ -22,7 +22,7 @@ case class Expand[C <: Context[_, _]](
       forProbing = false
     )
 
-  val bind =
+  val prepare =
     (row: context.PrepareRow) =>
       (liftings.foldLeft((0, row)) {
         case ((idx, row), lift) =>

@@ -30,7 +30,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro with SelectFlattening
       val expanded = ${expand(flattenAst)}
       ${c.prefix}.${TermName(method)}(
         expanded.string,
-        expanded.bind,
+        expanded.prepare,
         $extractor
       )  
     """

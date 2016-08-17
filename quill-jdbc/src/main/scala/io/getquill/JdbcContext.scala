@@ -22,9 +22,9 @@ import io.getquill.context.jdbc.JdbcEncoders
 import scala.reflect.runtime.universe._
 
 class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: DataSource with Closeable)
-  extends SqlContext[Dialect, Naming]
-  with JdbcEncoders
-  with JdbcDecoders {
+    extends SqlContext[Dialect, Naming]
+    with JdbcEncoders
+    with JdbcDecoders {
 
   def this(config: JdbcContextConfig) = this(config.dataSource)
   def this(config: Config) = this(JdbcContextConfig(config))
@@ -89,7 +89,7 @@ class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: Dat
       extractResult(rs, extractor)
     }
 
-  def executeQuerySingle[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => T = identity[ResultSet] _) =
+  def executeQuerySingle[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => T = identity[ResultSet] _): T =
     handleSingleResult(executeQuery(sql, prepare, extractor))
 
   def executeAction[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity): Long =
@@ -106,43 +106,33 @@ class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: Dat
       handleSingleResult(extractResult(ps.getGeneratedKeys, extractor))
     }
 
-  def executeBatchAction[B](batch: List[B], prepare: B => (String, PreparedStatement => PreparedStatement)): List[Long] =
+  def executeBatchAction(groups: List[BatchGroup]): List[Long] =
     withConnection { conn =>
-      batch.map(prepare)
-        .groupBy {
-          case (sql, prepare) =>
-            sql
-        }.map {
-          case (sql, prepareRows) =>
-            logger.info(sql)
-            val ps = conn.prepareStatement(sql)
-            prepareRows.foreach {
-              case (_, prepare) =>
-                prepare(ps)
-                ps.addBatch()
-            }
-            ps.executeBatch().toList.map(_.toLong)
-        }.flatten.toList
+      groups.map {
+        case BatchGroup(sql, prepare) =>
+          logger.info(sql)
+          val ps = conn.prepareStatement(sql)
+          prepare.foreach { f =>
+            f(ps)
+            ps.addBatch()
+          }
+          ps.executeBatch().map(_.toLong)
+      }.flatten
     }
 
-  def executeBatchActionReturning[B, T](batch: List[B], prepare: B => (String, PreparedStatement => PreparedStatement, String), extractor: ResultSet => T) =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: ResultSet => T): List[T] =
     withConnection { conn =>
-      batch.map(prepare)
-        .groupBy {
-          case (sql, prepare, returning) =>
-            (sql, returning)
-        }.map {
-          case ((sql, returning), prepareRows) =>
-            logger.info(sql)
-            val ps = conn.prepareStatement(sql, Array(returning))
-            prepareRows.foreach {
-              case (_, prepare, _) =>
-                prepare(ps)
-                ps.addBatch()
-            }
-            ps.executeBatch()
-            extractResult(ps.getGeneratedKeys, extractor)
-        }.toList.flatten
+      groups.map {
+        case BatchGroupReturning(sql, column, prepare) =>
+          logger.info(sql)
+          val ps = conn.prepareStatement(sql, Array(column))
+          prepare.foreach { f =>
+            f(ps)
+            ps.addBatch()
+          }
+          ps.executeBatch()
+          extractResult(ps.getGeneratedKeys, extractor)
+      }.flatten
     }
 
   @tailrec

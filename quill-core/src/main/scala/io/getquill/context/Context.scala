@@ -17,15 +17,18 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   type RunActionReturningResult[T]
   type RunBatchActionResult
   type RunBatchActionReturningResult[T]
+  
+  case class BatchGroup(string: String, prepare: List[PrepareRow => PrepareRow])
+  case class BatchGroupReturning(string: String, column: String, prepare: List[PrepareRow => PrepareRow])
 
   def probe(statement: String): Try[_]
 
   def run[T](quoted: Quoted[T]): RunQuerySingleResult[T] = macro QueryMacro.runQuerySingle[T]
   def run[T](quoted: Quoted[Query[T]]): RunQueryResult[T] = macro QueryMacro.runQuery[T]
-  def run(quoted: Quoted[Action]): RunActionResult = macro ActionMacro.runAction
-  def run[T](quoted: Quoted[ActionReturning[T]]): RunActionReturningResult[T] = macro ActionMacro.runActionReturning[T]
-  def run(quoted: Quoted[BatchAction[Action]]): RunBatchActionResult = macro ActionMacro.runBatchAction
-  def run[T](quoted: Quoted[BatchAction[ActionReturning[T]]]): RunBatchActionReturningResult[T] = macro ActionMacro.runBatchActionReturning[T]
+  def run(quoted: Quoted[Action[_]]): RunActionResult = macro ActionMacro.runAction
+  def run[T](quoted: Quoted[ActionReturning[_, T]]): RunActionReturningResult[T] = macro ActionMacro.runActionReturning[T]
+  def run(quoted: Quoted[BatchAction[Action[_]]]): RunBatchActionResult = macro ActionMacro.runBatchAction
+  def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): RunBatchActionReturningResult[T] = macro ActionMacro.runBatchActionReturning[T]
 
   protected def handleSingleResult[T](list: List[T]) =
     list match {

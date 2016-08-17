@@ -4,7 +4,7 @@ import io.getquill.Spec
 
 trait QueryResultTypeCassandraSpec extends Spec {
 
-  val context: CassandraContext[_, _, _]
+  val context: CassandraContext[_]
   import context._
 
   case class OrderTestEntity(id: Int, i: Int)

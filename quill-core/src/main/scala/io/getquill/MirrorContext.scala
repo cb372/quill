@@ -15,9 +15,9 @@ class MirrorContextWithQueryProbing[Idiom <: BaseIdiom, Naming <: NamingStrategy
   extends MirrorContext[Idiom, Naming] with QueryProbing
 
 class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
-  extends Context[Idiom, Naming]
-  with MirrorEncoders
-  with MirrorDecoders {
+    extends Context[Idiom, Naming]
+    with MirrorEncoders
+    with MirrorDecoders {
 
   override type RunQueryResult[T] = QueryMirror[T]
   override type RunQuerySingleResult[T] = QueryMirror[T]
@@ -38,8 +38,8 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
 
   case class ActionMirror(string: String, prepareRow: PrepareRow)
   case class ActionReturningMirror[T](string: String, prepareRow: Row, extractor: Row => T, returningColumn: String)
-  case class BatchActionMirror(prepare: List[(String, PrepareRow)])
-  case class BatchActionReturningMirror[T](prepare: List[(String, PrepareRow, String)], extractor: Row => T)
+  case class BatchActionMirror(groups: List[(String, List[Row])])
+  case class BatchActionReturningMirror[T](groups: List[(String, String, List[Row])], extractor: Row => T)
   case class QueryMirror[T](string: String, prepareRow: Row, extractor: Row => T)
 
   def executeQuery[T](string: String, prepare: Row => Row = identity, extractor: Row => T = identity[Row] _) =
@@ -54,18 +54,18 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
   def executeActionReturning[O](string: String, prepare: Row => Row = identity, extractor: Row => O, returningColumn: String) =
     ActionReturningMirror[O](string, prepare(Row()), extractor, returningColumn)
 
-  def executeBatchAction[B](batch: List[B], prepare: B => (String, Row => Row)) =
-    BatchActionMirror(
-      batch.map(prepare(_)).map {
-        case (ast, f) => (ast, f(Row()))
+  def executeBatchAction(groups: List[BatchGroup]) =
+    BatchActionMirror {
+      groups.map {
+        case BatchGroup(string, prepare) =>
+          (string, prepare.map(_(Row())))
       }
-    )
+    }
 
-  def executeBatchActionReturning[B, T](batch: List[B], prepare: B => (String, Row => Row, String), extractor: Row => T) =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Row => T) =
     BatchActionReturningMirror[T](
-      batch.map(prepare(_)).map {
-        case (ast, f, col) => (ast, f(Row()), col)
-      },
-      extractor
-    )
+      groups.map {
+        case BatchGroupReturning(string, column, prepare) =>
+          (string, column, prepare.map(_(Row())))
+      }, extractor)
 }
