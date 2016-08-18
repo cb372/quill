@@ -27,7 +27,8 @@ trait ContextMacro extends Quotation {
   protected def expand(ast: Ast): Tree =
     q"""
       val (idiom, naming) = ${idiomAndNamingDynamic}
-      io.getquill.context.Expand(${c.prefix}, $ast, ${translate(ast)}, idiom, naming)
+      val (ast, statement) = ${translate(ast)}
+      io.getquill.context.Expand(${c.prefix}, ast, statement, idiom, naming)
     """
 
   protected def extractAst[T](quoted: Tree): Ast =
@@ -52,20 +53,21 @@ trait ContextMacro extends Quotation {
   private def translateStatic(ast: Ast): Tree = {
     idiomAndNamingStatic match {
       case Success((idiom, naming)) =>
-        val statement = idiom.translate(ast)(naming)
+        val (normalizedAst, statement) = idiom.translate(ast)(naming)
 
         val (string, _) =
           ReifyStatement(
             idiom.liftingPlaceholder,
             idiom.emptyQuery,
-            idiom.prepareForProbing(statement),
+            statement,
             forProbing = true
           )
 
-        ProbeStatement(string, c)
+        ProbeStatement(idiom.prepareForProbing(string), c)
+        
         c.info(string)
 
-        q"${statement: Token}"
+        q"($normalizedAst, ${statement: Token})"
       case Failure(ex) =>
         c.warn(s"Can't translate query at compile time. Reason: $ex")
         translateDynamic(ast)

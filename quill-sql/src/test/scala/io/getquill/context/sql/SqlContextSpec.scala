@@ -11,7 +11,6 @@ import io.getquill.context.sql.testContext._
 import io.getquill.Literal
 import io.getquill.MirrorSqlDialect
 import io.getquill.MirrorContextWithQueryProbing
-import io.getquill.idiom.Statement
 
 class SqlContextSpec extends Spec {
 
@@ -54,7 +53,7 @@ class SqlContextSpec extends Spec {
 
     class EvilDBDialect extends SqlIdiom {
       override def liftingPlaceholder(index: Int): String = "?"
-      override def prepareForProbing(statement: Statement) = statement
+      override def prepareForProbing(string: String) = string
     }
     object testContext extends SqlContext[MirrorSqlDialect, Literal] {
 

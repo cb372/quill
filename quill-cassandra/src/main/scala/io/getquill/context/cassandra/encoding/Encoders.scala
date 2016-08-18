@@ -14,9 +14,8 @@ trait Encoders {
         f(row)(idx, value)
     }
 
-  private[this] val nullEncoder = encoder[Null] { row =>
-    (idx, v) =>
-      row.setToNull(idx)
+  private[this] val nullEncoder = encoder[Null] { row => (idx, v) =>
+    row.setToNull(idx)
   }
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
@@ -30,9 +29,8 @@ trait Encoders {
 
   implicit val stringEncoder = encoder(_.setString)
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
-    encoder[BigDecimal] { bs =>
-      (idx, v) =>
-        bs.setDecimal(idx, v.bigDecimal)
+    encoder[BigDecimal] { bs => (idx, v) =>
+      bs.setDecimal(idx, v.bigDecimal)
     }
   implicit val booleanEncoder = encoder(_.setBool)
   implicit val intEncoder = encoder(_.setInt)
@@ -40,9 +38,8 @@ trait Encoders {
   implicit val floatEncoder = encoder(_.setFloat)
   implicit val doubleEncoder = encoder(_.setDouble)
   implicit val byteArrayEncoder: Encoder[Array[Byte]] =
-    encoder[Array[Byte]] { bs =>
-      (idx, v) =>
-        bs.setBytes(idx, ByteBuffer.wrap(v))
+    encoder[Array[Byte]] { bs => (idx, v) =>
+      bs.setBytes(idx, ByteBuffer.wrap(v))
     }
   implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUUID)
   implicit val dateEncoder = encoder(_.setTimestamp)

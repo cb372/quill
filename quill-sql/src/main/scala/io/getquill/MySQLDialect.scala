@@ -14,9 +14,6 @@ import io.getquill.ast.StringOperator
 import io.getquill.context.sql.idiom.OffsetWithoutLimitWorkaround
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.OrderByCriteria
-import io.getquill.idiom.Statement
-import io.getquill.idiom.Token
-import io.getquill.idiom.StringToken
 import io.getquill.context.sql.idiom.QuestionMarkBindVariables
 
 trait MySQLDialect
@@ -24,13 +21,9 @@ trait MySQLDialect
   with OffsetWithoutLimitWorkaround
   with QuestionMarkBindVariables {
 
-  override def prepareForProbing(statement: Statement) = {
-    def quoteQuotes(token: Token) =
-      token match {
-        case StringToken(string) => StringToken(string.replace("'", "\\'"))
-        case other               => other
-      }
-    stmt"PREPARE p${statement.hashCode.abs.toString.token} FROM '${quoteQuotes(statement)}'"
+  override def prepareForProbing(string: String) = {
+    val quoted = string.replace("'", "\\'")
+    s"PREPARE p${quoted.hashCode.abs.toString.token} FROM '$quoted'"
   }
 
   override implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] =

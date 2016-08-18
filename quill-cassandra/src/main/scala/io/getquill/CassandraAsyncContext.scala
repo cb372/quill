@@ -11,7 +11,7 @@ import scala.collection.JavaConverters._
 import io.getquill.context.cassandra.CassandraSessionContext
 
 class CassandraAsyncContext[N <: NamingStrategy](config: CassandraContextConfig)
-    extends CassandraSessionContext[N](config) {
+  extends CassandraSessionContext[N](config) {
 
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
@@ -31,9 +31,11 @@ class CassandraAsyncContext[N <: NamingStrategy](config: CassandraContextConfig)
   def executeAction[T](cql: String, prepare: BoundStatement => BoundStatement = identity)(implicit ec: ExecutionContext): Future[Unit] =
     session.executeAsync(prepare(super.prepare(cql))).map(_ => ())
 
-  def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext): Unit =
-    groups.foreach {
-      case BatchGroup(cql, prepare) =>
-        prepare.foreach(executeAction(cql, _))
-    }
+  def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext): Future[Unit] =
+    Future.sequence {
+      groups.map {
+        case BatchGroup(cql, prepare) =>
+          prepare.map(executeAction(cql, _))
+      }.flatten
+    }.map(_ => ())
 }

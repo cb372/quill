@@ -15,9 +15,9 @@ import io.getquill.context.cassandra.encoding.Encoders
 import io.getquill.util.Messages.fail
 
 abstract class CassandraSessionContext[N <: NamingStrategy](config: CassandraContextConfig)
-    extends CassandraContext[N]
-    with Encoders
-    with Decoders {
+  extends CassandraContext[N]
+  with Encoders
+  with Decoders {
 
   override type PrepareRow = BoundStatement
   override type ResultRow = Row

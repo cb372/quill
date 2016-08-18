@@ -7,12 +7,11 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Operation
 import io.getquill.ast.Property
 import io.getquill.ast.StringOperator
-import io.getquill.idiom.Statement
 import io.getquill.context.sql.idiom.QuestionMarkBindVariables
 
 trait PostgresDialect
-  extends SqlIdiom
-  with QuestionMarkBindVariables {
+    extends SqlIdiom
+    with QuestionMarkBindVariables {
 
   override implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] =
     Tokenizer[Operation] {
@@ -23,8 +22,8 @@ trait PostgresDialect
 
   private[getquill] val preparedStatementId = new AtomicInteger
 
-  override def prepareForProbing(statement: Statement) =
-    stmt"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $statement"
+  override def prepareForProbing(string: String) =
+    s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $string"
 }
 
 object PostgresDialect extends PostgresDialect

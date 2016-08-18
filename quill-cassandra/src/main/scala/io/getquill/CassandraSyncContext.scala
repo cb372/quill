@@ -8,7 +8,7 @@ import io.getquill.context.cassandra.CassandraSessionContext
 import scala.collection.JavaConverters._
 
 class CassandraSyncContext[N <: NamingStrategy](config: CassandraContextConfig)
-    extends CassandraSessionContext[N](config) {
+  extends CassandraSessionContext[N](config) {
 
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))

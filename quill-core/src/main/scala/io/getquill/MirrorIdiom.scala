@@ -11,14 +11,16 @@ object MirrorIdiom extends MirrorIdiom
 
 class MirrorIdiom extends Idiom {
 
-  override def prepareForProbing(statement: Statement) = statement
+  override def prepareForProbing(string: String) = string
 
   override def liftingPlaceholder(index: Int): String = "?"
 
   override def emptyQuery = ""
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy): Statement =
-    stmt"${Normalize(ast).token}"
+  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    val normalizedAst = Normalize(ast)
+    (normalizedAst, stmt"${normalizedAst.token}")
+  }
 
   implicit val astTokenizer: Tokenizer[Ast] = Tokenizer[Ast] {
     case ast: Query           => ast.token

@@ -1,7 +1,6 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
-import io.getquill.Literal
 
 class CqlIdiomSpec extends Spec {
 
@@ -234,10 +233,10 @@ class CqlIdiomSpec extends Spec {
     }
     "collection" in {
       val q = quote {
-        qr1.filter(t => List(1, 2).contains(t.i))
+        qr1.filter(t => liftQuery(List(1, 2)).contains(t.i))
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i IN (1, 2)"
+        "SELECT s, i, l, o FROM TestEntity WHERE i IN (?, ?)"
     }
     "null (not supported)" in {
       val q = quote {
@@ -250,24 +249,24 @@ class CqlIdiomSpec extends Spec {
   "action" - {
     "insert" in {
       val q = quote {
-        qr1.insert
+        qr1.insert(lift(TestEntity("s", 1, 2L, None)))
       }
-      mirrorContext.run(q)(List()).string mustEqual
+      mirrorContext.run(q).string mustEqual
         "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
     }
     "update" - {
       "all" in {
         val q = quote {
-          qr1.update
+          qr1.update(lift(TestEntity("s", 1, 2L, None)))
         }
-        mirrorContext.run(q)(List()).string mustEqual
+        mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?"
       }
       "filtered" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).update
+          qr1.filter(t => t.i == 1).update(lift(TestEntity("s", 1, 2L, None)))
         }
-        mirrorContext.run(q)(List()).string mustEqual
+        mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ? WHERE i = 1"
       }
     }
@@ -294,18 +293,6 @@ class CqlIdiomSpec extends Spec {
           "DELETE i FROM TestEntity"
       }
     }
-    "invalid" in {
-      import io.getquill.util.Show._
-      import CqlIdiom._
-      implicit val n = Literal
-      val q = quote {
-        qr1.update
-      }
-      intercept[IllegalStateException] {
-        q.ast.body.show
-      }
-      ()
-    }
   }
 
   "infix" - {
@@ -328,9 +315,9 @@ class CqlIdiomSpec extends Spec {
     "action" - {
       "partial" in {
         val q = quote {
-          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).update
+          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).update(lift(TestEntity("s", 1, 2L, None)))
         }
-        mirrorContext.run(q)(List()).string mustEqual
+        mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ? WHERE i = 1"
       }
       "full" in {

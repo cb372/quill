@@ -11,15 +11,17 @@ import io.getquill.util.Interleave
 object CqlIdiom extends CqlIdiom
 
 trait CqlIdiom extends Idiom {
-  
+
   override def liftingPlaceholder(idx: Int) = "?"
-  
-  override def prepareForProbing(statement: Statement) = statement
+
+  override def prepareForProbing(string: String) = string
 
   override def emptyQuery = ""
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy) = 
-    stmt"${CqlNormalize(ast).token}"
+  override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
+    val normalizedAst = CqlNormalize(ast)
+    (normalizedAst, stmt"${normalizedAst.token}")
+  }
 
   implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Ast] =
     Tokenizer[Ast] {
@@ -56,7 +58,7 @@ trait CqlIdiom extends Idiom {
         select match {
           case Nil if distinct => fail(s"Cql only supports DISTINCT with a selection list.'")
           case Nil             => stmt"SELECT *"
-          case s               => stmt"SELECT$distinctToken${s.token}"
+          case s               => stmt"SELECT$distinctToken ${s.token}"
         }
       val withEntity =
         stmt"$withSelect FROM ${entity.token}"
@@ -117,7 +119,7 @@ trait CqlIdiom extends Idiom {
     case NullValue           => fail("Cql doesn't support null values.")
   }
 
-  implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
+  implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Infix] = Tokenizer[Infix] {
     case Infix(parts, params) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
@@ -142,16 +144,16 @@ trait CqlIdiom extends Idiom {
 
     Tokenizer[Action] {
 
-      case Insert(table: Entity, assignments) =>
+      case Insert(table, assignments) =>
         val columns = assignments.map(_.property.token)
         val values = assignments.map(_.value)
         stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(_.token).mkStmt(", ")})"
 
-      case Update(table: Entity, assignments) =>
-        stmt"UPDATE ${table.token} SET ${assignments.token}"
-
-      case Update(Filter(table: Entity, x, where), assignments) =>
+      case Update(Filter(table, x, where), assignments) =>
         stmt"UPDATE ${table.token} SET ${assignments.token} WHERE ${where.token}"
+
+      case Update(table, assignments) =>
+        stmt"UPDATE ${table.token} SET ${assignments.token}"
 
       case Delete(Map(Filter(table, _, where), _, columns)) =>
         stmt"DELETE ${columns.token} FROM ${table.token} WHERE ${where.token}"
@@ -169,7 +171,7 @@ trait CqlIdiom extends Idiom {
         fail(s"Cql doesn't support returning generated during insertion")
 
       case other =>
-        fail(s"Action ast can't be translated to sql: '$other'")
+        fail(s"Action ast can't be translated to cql: '$other'")
     }
   }
 

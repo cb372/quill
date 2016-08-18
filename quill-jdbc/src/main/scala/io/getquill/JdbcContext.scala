@@ -22,9 +22,9 @@ import io.getquill.context.jdbc.JdbcEncoders
 import scala.reflect.runtime.universe._
 
 class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: DataSource with Closeable)
-    extends SqlContext[Dialect, Naming]
-    with JdbcEncoders
-    with JdbcDecoders {
+  extends SqlContext[Dialect, Naming]
+  with JdbcEncoders
+  with JdbcDecoders {
 
   def this(config: JdbcContextConfig) = this(config.dataSource)
   def this(config: Config) = this(JdbcContextConfig(config))

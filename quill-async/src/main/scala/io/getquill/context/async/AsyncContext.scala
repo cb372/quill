@@ -19,9 +19,9 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
 
 abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](pool: PartitionedConnectionPool[C])
-    extends SqlContext[D, N]
-    with Decoders
-    with Encoders {
+  extends SqlContext[D, N]
+  with Decoders
+  with Encoders {
 
   private val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[AsyncContext[_, _, _]]))

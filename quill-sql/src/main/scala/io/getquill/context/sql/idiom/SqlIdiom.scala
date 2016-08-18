@@ -27,13 +27,14 @@ import io.getquill.ast.Lift
 
 trait SqlIdiom extends Idiom {
 
-  override def prepareForProbing(statement: Statement): Statement
+  override def prepareForProbing(string: String): String
 
   override def emptyQuery = "SELECT 0 FROM (SELECT 0) AS QUILL_EMPTY_SET WHERE 1 = 0"
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
+    val normalizedAst = SqlNormalize(ast)
     val token =
-      SqlNormalize(ast) match {
+       normalizedAst match {
         case q: Query =>
           val sql = SqlQuery(q)
           VerifySqlQuery(sql).map(fail)
@@ -42,7 +43,7 @@ trait SqlIdiom extends Idiom {
           other.token
       }
 
-    stmt"$token"
+    (normalizedAst, stmt"$token")
   }
 
   implicit def astTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Ast] =

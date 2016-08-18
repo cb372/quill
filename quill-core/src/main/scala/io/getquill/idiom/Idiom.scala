@@ -9,7 +9,7 @@ trait Idiom {
 
   def emptyQuery: String
 
-  def translate(ast: Ast)(implicit naming: NamingStrategy): Statement
+  def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement)
 
-  def prepareForProbing(statement: Statement): Statement
+  def prepareForProbing(string: String): String
 }

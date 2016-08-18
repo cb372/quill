@@ -1,6 +1,5 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.idiom.StatementInterpolator
 import io.getquill.Spec
 import io.getquill.Literal
 import io.getquill.MySQLDialect
@@ -26,10 +25,9 @@ class MySQLDialectSpec extends Spec {
   }
 
   "supports the `prepare` statement" in {
-    import StatementInterpolator._
-    val sql = stmt"test"
+    val sql = s"test"
     MySQLDialect.prepareForProbing(sql) mustEqual
-      stmt"PREPARE p${StringToken(sql.hashCode.abs.toString)} FROM '$sql'"
+      s"PREPARE p${StringToken(sql.hashCode.abs.toString)} FROM '$sql'"
   }
 
   "workaround missing nulls ordering feature in mysql" - {

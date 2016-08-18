@@ -15,7 +15,7 @@ trait QueryResultTypeCassandraSpec extends Spec {
     OrderTestEntity(3, 3)
   )
 
-  val insert = quote(query[OrderTestEntity].insert)
+  val insert = quote((e: OrderTestEntity) => query[OrderTestEntity].insert(e))
   val deleteAll = quote(query[OrderTestEntity].delete)
   val selectAll = quote(query[OrderTestEntity])
   val map = quote(query[OrderTestEntity].map(_.id))

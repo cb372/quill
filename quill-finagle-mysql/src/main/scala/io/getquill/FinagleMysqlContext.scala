@@ -25,11 +25,12 @@ import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 
 class FinagleMysqlContext[N <: NamingStrategy](
-  client: Client with Transactions,
-  private[getquill] val dateTimezone: TimeZone = TimeZone.getDefault)
-    extends SqlContext[MySQLDialect, N]
-    with FinagleMysqlDecoders
-    with FinagleMysqlEncoders {
+  client:                             Client with Transactions,
+  private[getquill] val dateTimezone: TimeZone                 = TimeZone.getDefault
+)
+  extends SqlContext[MySQLDialect, N]
+  with FinagleMysqlDecoders
+  with FinagleMysqlEncoders {
 
   def this(config: FinagleMysqlContextConfig) = this(config.client, config.dateTimezone)
   def this(config: Config) = this(FinagleMysqlContextConfig(config))

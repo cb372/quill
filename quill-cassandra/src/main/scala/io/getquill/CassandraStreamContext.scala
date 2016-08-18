@@ -13,7 +13,7 @@ import monifu.reactive.Observable
 import io.getquill.util.LoadConfig
 
 class CassandraStreamContext[N <: NamingStrategy](config: CassandraContextConfig)
-    extends CassandraSessionContext[N](config) {
+  extends CassandraSessionContext[N](config) {
 
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))

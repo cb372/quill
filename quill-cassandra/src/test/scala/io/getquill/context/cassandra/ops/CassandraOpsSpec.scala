@@ -54,23 +54,23 @@ class CassandraOpsSpec extends Spec {
     "options" - {
       "timestamp" in {
         val q = quote {
-          query[TestEntity].usingTimestamp(99).update
+          query[TestEntity].usingTimestamp(99).update(lift(TestEntity("s", 1, 2L, None)))
         }
-        mirrorContext.run(q)(List()).string mustEqual
+        mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity USING TIMESTAMP 99 SET s = ?, i = ?, l = ?, o = ?"
       }
       "ttl" in {
         val q = quote {
-          query[TestEntity].usingTtl(1).update
+          query[TestEntity].usingTtl(1).update(lift(TestEntity("s", 1, 2L, None)))
         }
-        mirrorContext.run(q)(List()).string mustEqual
+        mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity USING TTL 1 SET s = ?, i = ?, l = ?, o = ?"
       }
       "both" in {
         val q = quote {
-          query[TestEntity].using(1, 2).update
+          query[TestEntity].using(1, 2).update(lift(TestEntity("s", 1, 2L, None)))
         }
-        mirrorContext.run(q)(List()).string mustEqual
+        mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity USING TIMESTAMP 1 AND TTL 2 SET s = ?, i = ?, l = ?, o = ?"
       }
     }

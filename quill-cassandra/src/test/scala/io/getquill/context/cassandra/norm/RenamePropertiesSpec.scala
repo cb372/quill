@@ -19,9 +19,9 @@ class RenamePropertiesSpec extends Spec {
     "action" - {
       "insert" in {
         val q = quote {
-          e.insert
+          e.insert(lift(TestEntity("a", 1, 1L, None)))
         }
-        mirrorContext.run(q)(TestEntity("a", 1, 1L, None)).string mustEqual
+        mirrorContext.run(q).string mustEqual
           "INSERT INTO test_entity (field_s,field_i,l,o) VALUES (?, ?, ?, ?)"
       }
 
@@ -34,9 +34,9 @@ class RenamePropertiesSpec extends Spec {
       }
       "update" in {
         val q = quote {
-          e.filter(_.i == 999).update
+          e.filter(_.i == 999).update(lift(TestEntity("a", 1, 1L, None)))
         }
-        mirrorContext.run(q)(TestEntity("a", 1, 1L, None)).string mustEqual
+        mirrorContext.run(q).string mustEqual
           "UPDATE test_entity SET field_s = ?, field_i = ?, l = ?, o = ? WHERE field_i = 999"
       }
       "delete" in {
