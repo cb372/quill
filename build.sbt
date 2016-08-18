@@ -3,9 +3,9 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 
-lazy val `quill-with-js` = 
+// TODO Open issue for with-js project
+lazy val `quill` = 
   (project in file("."))
-    .settings(name := "quill")
     .settings(tutSettings ++ commonSettings)
     .settings(`tut-settings`:_*)
     .dependsOn(
@@ -13,18 +13,6 @@ lazy val `quill-with-js` =
       `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
     ).aggregate(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
-      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
-    )
-
-lazy val quill = 
-  (project in file("."))
-    .settings(tutSettings ++ commonSettings)
-    .settings(`tut-settings`:_*)
-    .dependsOn(
-      `quill-core-jvm`, `quill-sql-jvm`,
-      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
-    ).aggregate(
-      `quill-core-jvm`, `quill-sql-jvm`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
     )
 
