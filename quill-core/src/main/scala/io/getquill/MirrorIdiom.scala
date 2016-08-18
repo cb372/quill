@@ -22,7 +22,7 @@ class MirrorIdiom extends Idiom {
     (normalizedAst, stmt"${normalizedAst.token}")
   }
 
-  implicit val astTokenizer: Tokenizer[Ast] = Tokenizer[Ast] {
+  implicit def astTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Ast] = Tokenizer[Ast] {
     case ast: Query           => ast.token
     case ast: Function        => ast.token
     case ast: Value           => ast.token
@@ -38,7 +38,7 @@ class MirrorIdiom extends Idiom {
     case ast: Val             => ast.token
     case ast: Ordering        => ast.token
     case ast: QuotedReference => ast.ast.token
-    case ast: Lift            => stmt"?"
+    case ast: Lift            => ast.token
     case ast: Assignment      => ast.token
   }
 

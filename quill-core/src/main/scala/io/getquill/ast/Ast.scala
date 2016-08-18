@@ -6,6 +6,8 @@ sealed trait Ast {
   override def toString = {
     import io.getquill.MirrorIdiom._
     import io.getquill.idiom.StatementInterpolator._
+    implicit def liftTokenizer: Tokenizer[Lift] =
+      Tokenizer[Lift](_ => stmt"?")
     this.token.toString
   }
 }
