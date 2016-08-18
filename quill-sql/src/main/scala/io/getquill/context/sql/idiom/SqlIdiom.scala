@@ -34,7 +34,7 @@ trait SqlIdiom extends Idiom {
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
     val normalizedAst = SqlNormalize(ast)
     val token =
-       normalizedAst match {
+      normalizedAst match {
         case q: Query =>
           val sql = SqlQuery(q)
           VerifySqlQuery(sql).map(fail)

@@ -64,7 +64,7 @@ trait ContextMacro extends Quotation {
           )
 
         ProbeStatement(idiom.prepareForProbing(string), c)
-        
+
         c.info(string)
 
         q"($normalizedAst, ${statement: Token})"

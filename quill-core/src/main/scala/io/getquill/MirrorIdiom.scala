@@ -38,7 +38,7 @@ class MirrorIdiom extends Idiom {
     case ast: Val             => ast.token
     case ast: Ordering        => ast.token
     case ast: QuotedReference => ast.ast.token
-    case ast: Lift            => ast.token
+    case ast: Lift            => stmt"?"
     case ast: Assignment      => ast.token
   }
 

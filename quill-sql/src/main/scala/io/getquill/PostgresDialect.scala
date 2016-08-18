@@ -10,8 +10,8 @@ import io.getquill.ast.StringOperator
 import io.getquill.context.sql.idiom.QuestionMarkBindVariables
 
 trait PostgresDialect
-    extends SqlIdiom
-    with QuestionMarkBindVariables {
+  extends SqlIdiom
+  with QuestionMarkBindVariables {
 
   override implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] =
     Tokenizer[Operation] {
