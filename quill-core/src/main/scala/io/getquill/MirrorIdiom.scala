@@ -42,7 +42,7 @@ class MirrorIdiom extends Idiom {
     case ast: Assignment      => ast.token
   }
 
-  implicit val ifTokenizer: Tokenizer[If] = Tokenizer[If] {
+  implicit def ifTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[If] = Tokenizer[If] {
     case If(a, b, c) => stmt"if(${a.token}) ${b.token} else ${c.token}"
   }
 
@@ -50,15 +50,15 @@ class MirrorIdiom extends Idiom {
     case Dynamic(tree) => stmt"${tree.toString.token}"
   }
 
-  implicit val blockTokenizer: Tokenizer[Block] = Tokenizer[Block] {
+  implicit def blockTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Block] = Tokenizer[Block] {
     case Block(statements) => stmt"{ ${statements.map(_.token).mkStmt("; ")} }"
   }
 
-  implicit val valTokenizer: Tokenizer[Val] = Tokenizer[Val] {
+  implicit def valTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Val] = Tokenizer[Val] {
     case Val(name, body) => stmt"val ${name.token} = ${body.token}"
   }
 
-  implicit val queryTokenizer: Tokenizer[Query] = Tokenizer[Query] {
+  implicit def queryTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Query] = Tokenizer[Query] {
 
     case e: Entity => e.token
 
@@ -119,7 +119,7 @@ class MirrorIdiom extends Idiom {
     case DescNullsLast        => stmt"Ord.descNullsLast"
   }
 
-  implicit val optionOperationTokenizer: Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {
+  implicit def optionOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {
     case q: OptionOperation =>
       val method = q.t match {
         case OptionMap    => "map"
@@ -136,11 +136,11 @@ class MirrorIdiom extends Idiom {
     case FullJoin  => stmt"fullJoin"
   }
 
-  implicit val functionTokenizer: Tokenizer[Function] = Tokenizer[Function] {
+  implicit def functionTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Function] = Tokenizer[Function] {
     case Function(params, body) => stmt"(${params.token}) => ${body.token}"
   }
 
-  implicit val operationTokenizer: Tokenizer[Operation] = Tokenizer[Operation] {
+  implicit def operationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Operation] = Tokenizer[Operation] {
     case UnaryOperation(op: PrefixUnaryOperator, ast)  => stmt"${op.token}${scopedTokenizer(ast)}"
     case UnaryOperation(op: PostfixUnaryOperator, ast) => stmt"${scopedTokenizer(ast)}.${op.token}"
     case BinaryOperation(a, op, b)                     => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
@@ -151,7 +151,7 @@ class MirrorIdiom extends Idiom {
     case o => stmt"${o.toString.token}"
   }
 
-  implicit val propertyTokenizer: Tokenizer[Property] = Tokenizer[Property] {
+  implicit def propertyTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Property] = Tokenizer[Property] {
     case Property(ref, name) => stmt"${scopedTokenizer(ref)}.${name.token}"
   }
 
@@ -167,7 +167,7 @@ class MirrorIdiom extends Idiom {
     case e => stmt"${e.name.token}"
   }
 
-  implicit val actionTokenizer: Tokenizer[Action] = Tokenizer[Action] {
+  implicit def actionTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Action] = Tokenizer[Action] {
     case Update(query, assignments)    => stmt"${query.token}.update(${assignments.token})"
     case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
     case Delete(query)                 => stmt"${query.token}.delete"
@@ -175,11 +175,11 @@ class MirrorIdiom extends Idiom {
     case Foreach(query, alias, body)   => stmt"${query.token}.forach((${alias.token}) => ${body.token})"
   }
 
-  implicit val assignmentTokenizer: Tokenizer[Assignment] = Tokenizer[Assignment] {
+  implicit def assignmentTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(ident, property, value) => stmt"${ident.token} => ${property.token} -> ${value.token}"
   }
 
-  implicit val infixTokenizer: Tokenizer[Infix] = Tokenizer[Infix] {
+  implicit def infixTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Infix] = Tokenizer[Infix] {
     case Infix(parts, params) =>
       def tokenParam(ast: Ast) =
         ast match {
@@ -193,7 +193,7 @@ class MirrorIdiom extends Idiom {
       stmt"""infix"${body.token}""""
   }
 
-  private def scopedTokenizer(ast: Ast) =
+  private def scopedTokenizer(ast: Ast)(implicit liftTokenizer: Tokenizer[Lift]) =
     ast match {
       case _: Function        => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"
